@@ -8,7 +8,7 @@ from itsdangerous import (TimedJSONWebSignatureSerializer as
 class Users(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
-    user_name = db.Column(db.String(100), unique=True)
+    user_name = db.Column(db.String(100))
     user_username = db.Column(db.String(100), unique=True)
     user_password = db.Column(db.String(100))
 
@@ -50,7 +50,7 @@ class Users(db.Model):
         return user
 
     def __repr__(self):
-        return '<Admin: %s>' % self.admin_username
+        return '<Users %s>' % self.user_username
 
     # flask login properties
     @property

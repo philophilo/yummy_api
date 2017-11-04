@@ -7,7 +7,7 @@ class Config(object):
     DEBUG = False
     TESTING = False
     CSRF_ENABLED = True
-    SECRETE_KEY = 'this is the secrete'
+    SECRET_KEY = 'this is the secrete'
     SQLALCHEMY_DATABASE_URI = "postgresql://philophilo:philophilo@localhost/yummy"
 
 

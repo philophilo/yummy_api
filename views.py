@@ -10,7 +10,12 @@ from datetime import datetime
 import random
 import string
 import requests
+import traceback
 
+
+@login_manager.user_loader
+def load_admin(user_username):
+    return Users.query.filter_by(user_username=user_username).first()
 
 def check_crap(val):
     split_val = val.split(" ")
@@ -29,7 +34,7 @@ def check_values(names):
             if not check_crap(name): return [False, key, ' empty']
         else:
             return [False, key, ' not a string']
-    return True,
+    return [True]
 
 @app.route('/auth/register', methods=['POST'])
 def user_register():
@@ -54,7 +59,7 @@ def user_register():
                                    'status': 'pass',
                                    'message': 'Account created'}), 201
                 return jsonify({'status':'fail', 'message':
-                                user_details.keys()[val[1]]+" "+val[2]
+                                list(user_details.keys())[val[1]]+" "+val[2]
                                 })
 
             return jsonify({'status': 'fail',
@@ -74,3 +79,67 @@ def user_register():
                     'message': 'User registration'}), 201
 
 
+@app.route("/auth/login", methods=['POST'])
+def login():
+    if request.headers.get('content-type') == 'application/json':
+        info = request.json
+        try:
+            user_details = {
+                'username': info['username'],
+                'password': info['password']
+            }
+            if (len(user_details['username']) and
+                len(user_details['password'])):
+                val = check_values(user_details.values())
+
+                if val[0]:
+                    user = Users.query.filter_by(user_username=
+                                                 info['username']
+                                                 ).first()
+                    print(">>>>", user)
+                    # authenticate user
+                    if (user and check_password_hash(
+                        user.user_password,
+                        user_details['password'])):
+                        # generate token
+                        token = user.generate_auth_token()
+                        login_user(user)
+                        if token:
+                            return jsonify(
+                                {'token':token.decode('ascii'),
+                                 'status': 'pass',
+                                 'message': 'login was successful'}
+                            ), 201
+                    if user.user_username:
+                        return jsonify({'status': 'fail',
+                                        'message':
+                                        'The password is incorrect'}
+                                       ), 400
+                    else:
+                            return jsonify({'status': 'fail',
+                                        'message':
+                                        'Username does not exits'}
+                                       ), 400
+                else:
+                    return jsonify({'status':'fail',
+                                    'message':
+                                    list(user_details.keys())[val[1]]+" "+val[2]
+                                    }
+                                   ), 400
+            return jsonify({'status': 'fail',
+                            'message':
+                            'Username and password cannot be empty'}
+                           ), 400
+
+        #except TypeError:
+        #    return jsonify({'status': 'fail',
+        #                    'message':'password is empty'})
+
+        except Exception as ex:
+            print(ex)
+            traceback.print_exc()
+            # return jsonify({'status': 'fail',
+            #                'message': ex}), 500
+    return jsonify({'status': 'fail', 'message':
+                    'content-type not specified as application/json'}
+                   ), 400
