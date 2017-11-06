@@ -40,7 +40,7 @@ class Users(db.Model):
             payload = {
                 'exp': datetime.utcnow() + timedelta(minutes=expiration),
                 'iat': datetime.utcnow(),
-                'sub': self.id
+                'sub': self.user_username
             }
             # create the byte string token using the payload and the SECRET key
             print(app.config['SECRET_KEY'])
