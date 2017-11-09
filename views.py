@@ -174,7 +174,7 @@ def logout():
                     'logout was successful'}), 200
 
 
-@app.route('/create/category', methods=['POST'])
+@app.route('/category', methods=['POST'])
 @login_required
 def create_category():
     #pdb.set_trace()
@@ -214,7 +214,7 @@ def create_category():
     else:
         return jsonify({'status':'fail', 'message':'nara'}),400
 
-@app.route('/view/category', methods=['GET'])
+@app.route('/category', methods=['GET'])
 @login_required
 def view_all_categories():
     token = check_token()
@@ -248,7 +248,7 @@ def view_all_categories():
                             'message': 'ex'}),500
     return jsonify({'status': 'fail', 'message': 'no access token'}), 500
 
-@app.route('/view/category/<category_id>', methods=['GET'])
+@app.route('/category/<category_id>', methods=['GET'])
 def view_a_category(category_id):
     token = check_token()
     if token:
@@ -273,4 +273,58 @@ def view_a_category(category_id):
             print("><<", ex)
             return jsonify({'status': 'fail', 'message': 'ex'}),500
     return jsonify({'status': 'fail', 'message': 'no access token'}), 401
+
+
+@app.route('/category/<int:category_id>', methods=['UPDATE'])
+def update_category(category_id):
+    token = check_token()
+    if token:
+        try:
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                user_category = Category.query.filter_by(cat_id=category_id, user_id=user_id).first()
+                if request.headers.get('content-type') == 'application/json':
+                    data = request.json
+                    if user_category is not None and 'category_name' in data:
+                        user_category.cat_name = data["category_name"]
+                        user_category.update()
+                        response=jsonify({'list':dict(id=category.cat_id,
+                                                        category_name = category.name),
+                                            'status':'pass',
+                                            'message':'catgory updated'
+                                            })
+                        return response, 201
+                    return jsonify({'status':'fail',
+                                    'message':'category not found'
+                                    })
+                return jsonify({'status':'fail',
+                                'message':'category not found'
+                               })
+            abort(401)
+
+        except Exception as ex:
+            print(ex)
+            return jsonify({'status':'fail',
+                            'message':ex
+                               })
+    return jsonify({'status':'fail',
+                    'message':'category not found'
+                               })
+
+@app.route('/category/<int:category_id>', methods=['DELETE'])
+def delete_category(category_id):
+    token = check_token()
+    if token:
+        try:
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                user_category = Category.query.filter_by(cat_id=category_id, user_id=user_id).first()
+                if user_category is not None:
+                    user_category.delete()
+                    return jsonify({'message':'category deleted'}),200
+                return jsonify({'message':'category not found'})
+            abort(401)
+        except Exception as ex:
+            return jsonify({'message':ex})
+    return jsonify({'message':'no access token'})
 
