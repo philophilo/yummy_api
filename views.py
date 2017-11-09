@@ -47,7 +47,7 @@ def check_token():
         token = auth_header.split(" ")[1]
         return token
     except Exception as ex:
-        print(ex.message)
+        print(ex)
 
 
 @app.route('/auth/register', methods=['POST'])
@@ -217,4 +217,60 @@ def create_category():
 @app.route('/view/category', methods=['GET'])
 @login_required
 def view_all_categories():
-    return False
+    token = check_token()
+    if token:
+        try:
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                user_categories = Category.query.filter_by(user_id=user_id)
+                if user_categories is not None:
+                    results = []
+                    for category in user_categories:
+                        result = {
+                            'id': category.cat_id,
+                            'category_name': category.cat_name
+                        }
+                        results.append(result)
+                    return jsonify({'categories':results,
+                                    'count':str(len(results)),
+                                    'status':'pass',
+                                    'message':'categories found'})
+                return jsonify({'count': '0',
+                                'status': 'pass',
+                                'message': 'no categories found'
+                                }), 404
+            print("shit")
+            abort(401)
+        except Exception as ex:
+            print(ex, "<<<category error")
+            traceback.print_exc()
+            return jsonify({'status': 'fail',
+                            'message': 'ex'}),500
+    return jsonify({'status': 'fail', 'message': 'no access token'}), 500
+
+@app.route('/view/category/<category_id>', methods=['GET'])
+def view_a_category(category_id):
+    token = check_token()
+    if token:
+        try:
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                user_category = Category.query.filter_by(cat_id=category_id, user_id=user_id).first()
+
+                if user_category is not None:
+                    response = jsonify({'list':dict(id=user_category.cat_id,
+                                                    category_name=user_category.cat_name),
+                                        'count':'1',
+                                        'status':'pass',
+                                        'message':'list found'})
+                    return response, 200
+                return jsonify({'count': '0',
+                                       'status': 'pass',
+                                       'messaage': 'category not found'
+                                       }), 404
+            abort(401)
+        except Exception as ex:
+            print("><<", ex)
+            return jsonify({'status': 'fail', 'message': 'ex'}),500
+    return jsonify({'status': 'fail', 'message': 'no access token'}), 401
+
