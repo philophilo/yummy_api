@@ -1,7 +1,7 @@
 import os
 from app import app, login_manager, APP_ROOT
 from flask import g, request, abort, jsonify, make_response
-from models import Users, Category
+from models import Users, Category, Recipes
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import (generate_password_hash,
                                check_password_hash)
@@ -12,6 +12,7 @@ import random
 import string
 import requests
 import traceback
+from datetime import datetime
 #import pdb
 
 
@@ -326,5 +327,31 @@ def delete_category(category_id):
             abort(401)
         except Exception as ex:
             return jsonify({'message':ex})
+    return jsonify({'message':'no access token'})
+
+@app.route('/category/recipes/<int:category_id>', methods=['POST'])
+def add_recipe(category_id):
+    token = check_token()
+    if token:
+        try:
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                if request.headers.get('content-type') == 'application/json':
+                    data = request.json
+                    user_category = Category.query.filter_by(cat_id=category_id, user_id=user_id).first()
+                    if user_category is not None and 'recipe_name' in data:
+                        recipe = Recipes(name=data['recipe_name'],
+                                        category=category_id,
+                                        ingredients=data['ingredients'],
+                                        date=datetime.now())
+                        recipe.add()
+                        return jsonify({'message':'Recipe created'
+                                        }), 201
+                    return jsonify({'message':'category not found'})
+                return jsonify({'message':'content should be json'})
+            abort(401)
+        except Exception as ex:
+            print(ex)
+            return jsonify({'message':'ex'})
     return jsonify({'message':'no access token'})
 
