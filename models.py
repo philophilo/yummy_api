@@ -40,7 +40,7 @@ class Users(db.Model):
             payload = {
                 'exp': datetime.utcnow() + timedelta(minutes=expiration),
                 'iat': datetime.utcnow(),
-                'sub': self.user_username
+                'sub': self.id
             }
             # create the byte string token using the payload and the SECRET key
             print(app.config['SECRET_KEY'])
@@ -54,38 +54,17 @@ class Users(db.Model):
             traceback.print_exc()
             print(self.id)
             return str(ex)
-        """
-        try:
-            s = Serializer(app.config['SECRET_KEY'],
-                           expires_in = expiration)
-            return s.dumps({'user_id': self.id})
-        except Exception as ex:
-            return str(ex)
-        """
 
     @staticmethod
     def decode_token(token):
         try:
             payload = jwt.decode(token, app.config['SECRET_KEY'])
-            print(">>>", payload)
+            #print(">>>", payload)
             return payload['sub']
         except jwt.ExpiredSignatureError:
             return "The token is expired"
         except jwt.InvalidTokenError:
             return "Invalid token"
-
-        """
-        s = Serializer(app.config['SECRET_KEY'])
-        try:
-            data = s.loads(token)
-            return data
-        except SignatureExpired:
-            return None
-        except BadSignature:
-            return None
-        user = Users.query.get(data['user_id'])
-        return user
-        """
 
 
     def __repr__(self):
@@ -105,7 +84,7 @@ class Users(db.Model):
         return False
 
     def get_id(self):
-        return str(self.id)
+        return str(self.user_username)
 
 
 class Category(db.Model):
@@ -117,8 +96,9 @@ class Category(db.Model):
                                   order_by='Recipes.rec_id',
                                   cascade='delete, all')
 
-    def __init__(self, name):
-        self.cat_name = name
+    def __init__(self, cat_name, user_id):
+        self.cat_name = cat_name
+        self.user_id = user_id
 
     def add(self):
         db.session.add(self)

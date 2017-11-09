@@ -1,7 +1,7 @@
 import os
 from app import app, login_manager, APP_ROOT
-from flask import g, request, abort, jsonify
-from models import Users
+from flask import g, request, abort, jsonify, make_response
+from models import Users, Category
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import (generate_password_hash,
                                check_password_hash)
@@ -12,7 +12,7 @@ import random
 import string
 import requests
 import traceback
-import pdb
+#import pdb
 
 
 login_manager.login_view = '/'
@@ -38,6 +38,17 @@ def check_values(names):
         else:
             return [False, key, 'not a string']
     return [True]
+
+
+def check_token():
+    token = None
+    try:
+        auth_header = request.headers.get('Authorization')
+        token = auth_header.split(" ")[1]
+        return token
+    except Exception as ex:
+        print(ex.message)
+
 
 @app.route('/auth/register', methods=['POST'])
 def user_register():
@@ -98,7 +109,7 @@ def login():
 
                 if val[0]:
                     user = Users.query.filter_by(user_username=
-                                                 info['username']
+                                                 user_details['username']
                                                  ).first()
                     # authenticate user
                     if (user and check_password_hash(
@@ -106,11 +117,11 @@ def login():
                         user_details['password'])):
                         # generate token
                         token = user.generate_auth_token()
+                        print(">>>", user.user_username)
                         login_user(user)
                         if token:
                             print(current_user)
-                            g.user = current_user
-                            pdb.set_trace()
+
 
                             return jsonify(
                                 {'token':token.decode('ascii'),
@@ -155,10 +166,9 @@ def home():
     return jsonify({'status':'pass'})
 
 @app.route('/auth/logout', methods=['POST'])
-
 @login_required
 def logout():
-    pdb.set_trace()
+    #pdb.set_trace()
     logout_user()
     return jsonify({'status': 'pass', 'message':
                     'logout was successful'}), 200
@@ -167,15 +177,44 @@ def logout():
 @app.route('/create/category', methods=['POST'])
 @login_required
 def create_category():
-    pdb.set_trace()
-    token = None
-    try:
-        auth_header = request.headers.get('Authorization')
-        token = auth_header.split(" ")[1]
-    except Exception as ex:
-        print(ex.message)
+    #pdb.set_trace()
+    token = check_token()
 
     if token:
-        print(token)
+        user_id = Users.decode_token(token)
+        if isinstance(int(user_id), int):
+            if request.headers.get('content-type') == 'application/json':
+                data = request.json
+                if 'category_name' in data:
+                    try:
+                        category = Category(user_id = int(user_id),
+                                            cat_name=data['category_name']
+                                            )
+                        category.add()
+                        response = jsonify({'id': category.cat_id,
+                                            'category_name': category.cat_name,
+                                            'status': 'pass',
+                                            'message': 'category created'})
+                        return response, 201
+                    except Exception as ex:
+                        print(ex)
+                        return jsonify({'status':'fail',
+                                        'message':'ex'
+                                        }), 500
+                return jsonify({'status':'fail',
+                                'message':'category name not found'
+                                }), 400
+            return jsonify({'status':'fail',
+                            'message':'message not json format'
+                            }), 400
+    #return jsonify({'status':'fail',
+    #                'message':'token not found'
+    #                }), 500
+
     else:
-        print("Nara")
+        return jsonify({'status':'fail', 'message':'nara'}),400
+
+@app.route('/view/category', methods=['GET'])
+@login_required
+def view_all_categories():
+    return False
