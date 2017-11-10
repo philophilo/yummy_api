@@ -240,7 +240,6 @@ def view_all_categories():
                                 'status': 'pass',
                                 'message': 'no categories found'
                                 }), 404
-            print("shit")
             abort(401)
         except Exception as ex:
             print(ex, "<<<category error")
@@ -383,3 +382,57 @@ def update_recipe(category_id, recipe_id):
             print(ex)
             return jsonify({'message':'ex'})
     return jsonify({'message':'no access token'})
+
+
+@app.route('/category/recipes/<int:category_id>/<int:recipe_id>', methods=['DELETE'])
+def delete_recipe(category_id, recipe_id):
+    token = check_token()
+    if token:
+        try:
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                user_category = Category.query.filter_by(cat_id=category_id, user_id=user_id).first()
+                if user_category is not None:
+                    user_recipe = Recipes.query.filter_by(rec_cat=category_id, rec_id=recipe_id).first()
+                    data = request.json
+                    if user_recipe is not None and 'recipe_name' in data:
+                        user_category.delete()
+                        return jsonify({'message':'category deleted'}),200
+                    return jsonify({'message':'Recipe not found'}),404
+                return jsonify({'message':'category not found'}), 404
+            abort(401)
+        except Exception as ex:
+            return jsonify({'message':ex})
+    return jsonify({'message':'no access token'})
+
+
+@app.route('/category/recipes/<int:category_id>', methods=['GET'])
+def view_category_recipes(category_id):
+    token = check_token()
+    if token:
+        try:
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                user_categories = Category.query.filter_by(cat_id=category_id).first()
+                if user_categories is not None:
+                    user_recipes = Recipes.query.filter_by(rec_cat=category_id)
+                    if user_recipes is not None:
+                        results = []
+                        for recipe in user_recipes:
+                            result = {
+                                'id': recipe.rec_id,
+                                'recipe_name': recipe.rec_name,
+                                'ingredients': recipe.rec_ingredients.split()
+                            }
+                            results.append(result)
+                        return jsonify({'recipes':results,
+                                        'count':str(len(results))}), 200
+                    return jsonify({'message':'no recipes found'}), 404
+                return jsonify({'message':'no categories found'}), 404
+            abort(401)
+        except Exception as ex:
+            print(ex, "<<<category error")
+            traceback.print_exc()
+            return jsonify({'status': 'fail',
+                            'message': 'ex'}),500
+    return jsonify({'message': 'no access token'}), 500
