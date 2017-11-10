@@ -70,7 +70,7 @@ class Users(db.Model):
     def __repr__(self):
         return '<Users %s>' % self.user_username
 
-    # flask login
+    # flask login properties
     @property
     def is_authenticated(self):
         return True
@@ -119,7 +119,7 @@ class Category(db.Model):
 class Recipes(db.Model):
     __tablename__ = 'recipes'
     rec_id = db.Column(db.Integer, primary_key=True)
-    rec_name = db.Column(db.String(100), nullable=False, unique=True)
+    rec_name = db.Column(db.String(100), nullable=False)
     rec_cat = db.Column(db.Integer, db.ForeignKey(Category.cat_id))
     rec_ingredients = db.Column(db.String(500), nullable=False)
     rec_date = db.Column(db.DateTime, nullable=False)

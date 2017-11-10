@@ -1,5 +1,6 @@
 import unittest
-from app import app, db, models
+from app import app, db
+import models
 from flask_testing import TestCase
 import json
 from werkzeug.security import generate_password_hash
