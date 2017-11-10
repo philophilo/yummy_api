@@ -70,7 +70,7 @@ class Users(db.Model):
     def __repr__(self):
         return '<Users %s>' % self.user_username
 
-    # flask login properties
+    # flask login
     @property
     def is_authenticated(self):
         return True

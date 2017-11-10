@@ -70,29 +70,24 @@ def user_register():
                                      user_details['password']),
                                  user_details['name'])
                     user.add()
-                    return jsonify({'username': user.user_username,
-                                   'status': 'pass',
-                                   'message': 'Account created'}), 201
+                    return jsonify({'username': user.user_username}), 201
                 else:
-                    return jsonify({'status':'fail', 'message':
+                    return jsonify({'message':
                                     list(user_details.keys())[val[1]]+" "+val[2]
                                     })
 
-            return jsonify({'status': 'fail',
-                            'message':
+            return jsonify({'message':
                             'Username and Password cannot be empty'
                             }), 400
 
         except IntegrityError:
-            return jsonify({'status': 'fail', 'message':
+            return jsonify({'message':
                             'The username is not available exits'}
                             ), 500
 
         except Exception as ex:
-            return jsonify({'status': 'fail',
-                            'message': ex.message}), 500
-    return jsonify({'status': 'pass',
-                    'message': 'User registration'}), 201
+            return jsonify({'message': ex.message}), 500
+    return jsonify({'message': 'User registration'}), 201
 
 
 @app.route("/auth/login", methods=['POST', 'GET'])
@@ -126,52 +121,40 @@ def login():
 
                             return jsonify(
                                 {'token':token.decode('ascii'),
-                                 'status': 'pass',
                                  'message': 'login was successful'}
-                            ), 201
+                            ), 200
 
                     if user.user_username:
-                        return jsonify({'status': 'fail',
-                                        'message':
+                        return jsonify({'message':
                                         'The password is incorrect'}
                                        ), 400
                     else:
-                            return jsonify({'status': 'fail',
-                                        'message':
+                            return jsonify({'message':
                                         'Username does not exits'}
                                        ), 400
                 else:
-                    return jsonify({'status':'fail',
-                                    'message':
+                    return jsonify({'message':
                                     list(user_details.keys())[val[1]]+" "+val[2]
                                     }
                                    ), 400
-            return jsonify({'status': 'fail',
-                            'message':
+            return jsonify({'message':
                             'Username and password cannot be empty'}
                            ), 400
 
         except Exception as ex:
             print(ex)
             traceback.print_exc()
-            # return jsonify({'status': 'fail',
-            #                'message': ex}), 500
-    return jsonify({'status': 'fail', 'message':
+    return jsonify({'message':
                     'content-type not specified as application/json'}
                    ), 400
 
-
-@app.route('/')
-def home():
-    print(current_user)
-    return jsonify({'status':'pass'})
 
 @app.route('/auth/logout', methods=['POST'])
 @login_required
 def logout():
     #pdb.set_trace()
     logout_user()
-    return jsonify({'status': 'pass', 'message':
+    return jsonify({'message':
                     'logout was successful'}), 200
 
 
@@ -194,26 +177,19 @@ def create_category():
                         category.add()
                         response = jsonify({'id': category.cat_id,
                                             'category_name': category.cat_name,
-                                            'status': 'pass',
                                             'message': 'category created'})
                         return response, 201
                     except Exception as ex:
                         print(ex)
-                        return jsonify({'status':'fail',
-                                        'message':'ex'
+                        return jsonify({'message':ex
                                         }), 500
-                return jsonify({'status':'fail',
-                                'message':'category name not found'
+                return jsonify({'message':'category name not found'
                                 }), 400
-            return jsonify({'status':'fail',
-                            'message':'message not json format'
+            return jsonify({'message':'message not json format'
                             }), 400
-    #return jsonify({'status':'fail',
-    #                'message':'token not found'
-    #                }), 500
 
     else:
-        return jsonify({'status':'fail', 'message':'nara'}),400
+        return jsonify({'message':'nara'}),400
 
 @app.route('/category', methods=['GET'])
 @login_required
@@ -234,19 +210,16 @@ def view_all_categories():
                         results.append(result)
                     return jsonify({'categories':results,
                                     'count':str(len(results)),
-                                    'status':'pass',
                                     'message':'categories found'})
                 return jsonify({'count': '0',
-                                'status': 'pass',
                                 'message': 'no categories found'
                                 }), 404
             abort(401)
         except Exception as ex:
             print(ex, "<<<category error")
             traceback.print_exc()
-            return jsonify({'status': 'fail',
-                            'message': 'ex'}),500
-    return jsonify({'status': 'fail', 'message': 'no access token'}), 500
+            return jsonify({'message': 'ex'}),500
+    return jsonify({'message': 'no access token'}), 500
 
 @app.route('/category/<category_id>', methods=['GET'])
 def view_a_category(category_id):
@@ -261,18 +234,16 @@ def view_a_category(category_id):
                     response = jsonify({'list':dict(id=user_category.cat_id,
                                                     category_name=user_category.cat_name),
                                         'count':'1',
-                                        'status':'pass',
                                         'message':'list found'})
                     return response, 200
                 return jsonify({'count': '0',
-                                       'status': 'pass',
                                        'messaage': 'category not found'
                                        }), 404
             abort(401)
         except Exception as ex:
             print("><<", ex)
-            return jsonify({'status': 'fail', 'message': 'ex'}),500
-    return jsonify({'status': 'fail', 'message': 'no access token'}), 401
+            return jsonify({'message': 'ex'}),500
+    return jsonify({'message': 'no access token'}), 401
 
 
 @app.route('/category/<int:category_id>', methods=['UPDATE'])
@@ -288,27 +259,22 @@ def update_category(category_id):
                     if user_category is not None and 'category_name' in data:
                         user_category.cat_name = data["category_name"]
                         user_category.update()
-                        response=jsonify({'list':dict(id=category.cat_id,
-                                                        category_name = category.name),
-                                            'status':'pass',
-                                            'message':'catgory updated'
+                        response=jsonify({'list':dict(id=user_category.cat_id,
+                                                        category_name = user_category.name),
+                                            'message':'category updated'
                                             })
                         return response, 201
-                    return jsonify({'status':'fail',
-                                    'message':'category not found'
+                    return jsonify({'message':'category not found'
                                     })
-                return jsonify({'status':'fail',
-                                'message':'category not found'
+                return jsonify({'message':'category not found'
                                })
             abort(401)
 
         except Exception as ex:
             print(ex)
-            return jsonify({'status':'fail',
-                            'message':ex
+            return jsonify({'message':ex
                                })
-    return jsonify({'status':'fail',
-                    'message':'category not found'
+    return jsonify({'message':'category not found'
                                })
 
 @app.route('/category/<int:category_id>', methods=['DELETE'])
@@ -433,6 +399,5 @@ def view_category_recipes(category_id):
         except Exception as ex:
             print(ex, "<<<category error")
             traceback.print_exc()
-            return jsonify({'status': 'fail',
-                            'message': 'ex'}),500
+            return jsonify({'message': 'ex'}),500
     return jsonify({'message': 'no access token'}), 500
