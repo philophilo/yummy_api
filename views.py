@@ -355,3 +355,31 @@ def add_recipe(category_id):
             return jsonify({'message':'ex'})
     return jsonify({'message':'no access token'})
 
+
+@app.route('/category/recipes/<int:category_id>/<int:recipe_id>', methods=['PUT'])
+def update_recipe(category_id, recipe_id):
+    token = check_token()
+    if token:
+        try:
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                user_category = Category.query.filter_by(cat_id=category_id, user_id=user_id).first()
+                if user_category is not None:
+                    if request.headers.get('content-type') == 'application/json':
+                        user_recipe = Recipes.query.filter_by(rec_cat=category_id, rec_id=recipe_id).first()
+                        data = request.json
+                        if user_recipe is not None and 'recipe_name' in data:
+                            user_recipe.rec_name = data['recipe_name']
+                            user_recipe.rec_cat = category_id
+                            user_recipe.rec_ingredients = data['ingredients']
+                            user_recipe.update()
+                            return jsonify({'message':'Recipe update'
+                                            }), 200
+                        return jsonify({'message':'Recipe not found'})
+                    return jsonify({'message':'content should be json'})
+                return jsonify({'message':'category not found'})
+            abort(401)
+        except Exception as ex:
+            print(ex)
+            return jsonify({'message':'ex'})
+    return jsonify({'message':'no access token'})
