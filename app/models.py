@@ -1,11 +1,11 @@
 from app import db, app
-import jwt
 from sqlalchemy.dialects.postgresql import JSON
 from itsdangerous import (TimedJSONWebSignatureSerializer as
                           Serializer, BadSignature,
                           SignatureExpired)
 from datetime import datetime, timedelta
 import traceback
+import jwt
 
 
 class Users(db.Model):

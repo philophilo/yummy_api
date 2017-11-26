@@ -1,7 +1,7 @@
 import os
 from app import app, login_manager, APP_ROOT
 from flask import g, request, abort, jsonify, make_response
-from models import Users, Category, Recipes
+from app.models import Users, Category, Recipes
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import (generate_password_hash,
                                check_password_hash)
@@ -86,11 +86,12 @@ def user_register():
                             ), 500
 
         except Exception as ex:
-            return jsonify({'message': ex.message}), 500
+            print(ex)
+            #return jsonify({'message': ex}), 500
     return jsonify({'message': 'User registration'}), 201
 
 
-@app.route("/auth/login", methods=['POST', 'GET'])
+@app.route("/auth/login", methods=['POST'])
 def login():
     if request.headers.get('content-type') == 'application/json':
         info = request.json
@@ -231,10 +232,10 @@ def view_a_category(category_id):
                 user_category = Category.query.filter_by(cat_id=category_id, user_id=user_id).first()
 
                 if user_category is not None:
-                    response = jsonify({'list':dict(id=user_category.cat_id,
+                    response = jsonify({'category':dict(id=user_category.cat_id,
                                                     category_name=user_category.cat_name),
                                         'count':'1',
-                                        'message':'list found'})
+                                        'message':'category found'})
                     return response, 200
                 return jsonify({'count': '0',
                                        'messaage': 'category not found'
@@ -246,7 +247,7 @@ def view_a_category(category_id):
     return jsonify({'message': 'no access token'}), 401
 
 
-@app.route('/category/<int:category_id>', methods=['UPDATE'])
+@app.route('/category/<int:category_id>', methods=['PUT'])
 def update_category(category_id):
     token = check_token()
     if token:
@@ -260,7 +261,7 @@ def update_category(category_id):
                         user_category.cat_name = data["category_name"]
                         user_category.update()
                         response=jsonify({'list':dict(id=user_category.cat_id,
-                                                        category_name = user_category.name),
+                                                        category_name = user_category.cat_name),
                                             'message':'category updated'
                                             })
                         return response, 201
@@ -272,8 +273,8 @@ def update_category(category_id):
 
         except Exception as ex:
             print(ex)
-            return jsonify({'message':ex
-                               })
+            #return jsonify({'message':ex
+            #                   })
     return jsonify({'message':'category not found'
                                })
 
@@ -338,7 +339,7 @@ def update_recipe(category_id, recipe_id):
                             user_recipe.rec_cat = category_id
                             user_recipe.rec_ingredients = data['ingredients']
                             user_recipe.update()
-                            return jsonify({'message':'Recipe update'
+                            return jsonify({'message':'Recipe updated'
                                             }), 200
                         return jsonify({'message':'Recipe not found'})
                     return jsonify({'message':'content should be json'})
@@ -362,13 +363,14 @@ def delete_recipe(category_id, recipe_id):
                     user_recipe = Recipes.query.filter_by(rec_cat=category_id, rec_id=recipe_id).first()
                     data = request.json
                     if user_recipe is not None and 'recipe_name' in data:
-                        user_category.delete()
-                        return jsonify({'message':'category deleted'}),200
+                        user_recipe.delete()
+                        return jsonify({'message':'Recipe deleted'}),200
                     return jsonify({'message':'Recipe not found'}),404
-                return jsonify({'message':'category not found'}), 404
+                return jsonify({'message':'Recipe not found'}), 404
             abort(401)
         except Exception as ex:
-            return jsonify({'message':ex})
+            print(ex)
+            return jsonify({'message':str(ex)})
     return jsonify({'message':'no access token'})
 
 
@@ -388,13 +390,41 @@ def view_category_recipes(category_id):
                             result = {
                                 'id': recipe.rec_id,
                                 'recipe_name': recipe.rec_name,
-                                'ingredients': recipe.rec_ingredients.split()
+                                'ingredients': recipe.rec_ingredients.split(",")
                             }
                             results.append(result)
                         return jsonify({'recipes':results,
                                         'count':str(len(results))}), 200
                     return jsonify({'message':'no recipes found'}), 404
                 return jsonify({'message':'no categories found'}), 404
+            abort(401)
+        except Exception as ex:
+            print(ex, "<<<category error")
+            traceback.print_exc()
+            return jsonify({'message': 'ex'}),500
+    return jsonify({'message': 'no access token'}), 500
+
+
+@app.route('/category/recipes/one/<int:recipe_id>', methods=['GET'])
+def view_one_recipe(recipe_id):
+    token = check_token()
+    if token:
+        try:
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                user_recipes = Recipes.query.filter_by(rec_id=recipe_id)
+                if user_recipes is not None:
+                    results = []
+                    for recipe in user_recipes:
+                        result = {
+                            'id': recipe.rec_id,
+                            'recipe_name': recipe.rec_name,
+                            'ingredients': recipe.rec_ingredients.split(",")
+                        }
+                        results.append(result)
+                    return jsonify({'recipes':results,
+                                    'count':str(len(results))}), 200
+                return jsonify({'message':'no recipes found'}), 404
             abort(401)
         except Exception as ex:
             print(ex, "<<<category error")

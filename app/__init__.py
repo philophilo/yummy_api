@@ -1,7 +1,7 @@
 from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 import os
-from config import DevelopingConfig
+from app.config import DevelopingConfig
 from flask_login import LoginManager
 
 
@@ -16,7 +16,4 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 
 
-from views import *
-
-if __name__ == '__main__':
-    app.run()
+from app.views import *
