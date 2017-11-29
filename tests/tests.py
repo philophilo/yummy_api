@@ -298,6 +298,20 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'category not found')
 
+    def test_deleting_known_category(self):
+        self.create_user()
+        self.create_category()
+        self.create_recipe()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.delete('/category/1',
+                                          content_type='application/json',
+                                          headers=headers,
+                                          data=json.dumps(
+                                              dict(category_name="Meat")))
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['message'], 'category deleted')
+
 
 if __name__ == "__main__":
     unittest.main()
