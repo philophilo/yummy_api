@@ -160,6 +160,19 @@ class TestYummyApi(TestCase):
             self.assertEqual(reply['message'], 'category updated')
             self.assertTrue(reply['category'], msg='no categories')
 
+    def test_updating_unknown_category(self):
+        self.create_user()
+        self.create_category()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.put('/category/2',
+                                       content_type='application/json',
+                                       headers=headers,
+                                       data=json.dumps(
+                                           dict(category_name='local beef')))
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['message'], 'category not found')
+
 
 if __name__ == "__main__":
     unittest.main()
