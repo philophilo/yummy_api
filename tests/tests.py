@@ -9,28 +9,33 @@ from flask_testing import TestCase
 class TestYummyApi(TestCase):
     test_user = "user"
     test_user_password = "pass"
-    test_user_name = "user's name"
+    test_user_name = "name"
     test_category_name = "Meat"
     test_recipe = "local beef"
     test_recipe_ingredients = "onions, meat, tomatoes"
 
+    # function required by flask-testing
     def create_app(self):
         return app
 
+    # defined functions
     def create_user(self):
-        user = models.User(name=self.test_user,
-                           password=generate_password_hash(self.test_user_password))
+        user = models.Users(username=self.test_user,
+                            name=self.test_user_name,
+                            password=generate_password_hash(
+                                self.test_user_password))
         user.add()
 
     def create_category(self):
         category = models.Category(user_id=1,
-                               cat_name=self.test_category_name)
+                                   cat_name=self.test_category_name)
         category.add()
 
     def create_recipe(self):
-        recipe = models.Recipes(name=self.test_category,
-                           category=1,
-                           ingredients=self.test_recipe_ingredients)
+        recipe = models.Recipes(name=self.test_recipe,
+                                category=1,
+                                ingredients=self.test_recipe_ingredients,
+                                date=datetime.now())
         recipe.add()
 
     def setUp(self):
@@ -41,6 +46,7 @@ class TestYummyApi(TestCase):
         db.session.remove()
         db.drop_all()
 
+    # testing user registration
     def test_user_can_register(self):
         with self.client:
             response = self.client.post('/auth/register',
@@ -53,11 +59,5 @@ class TestYummyApi(TestCase):
             self.assertEqual(reply['username'], "user", msg="username key fail")
 
 
-    """
-    def test_user_existing_account(self):
-        self.create_user()
-        with self.client:
-            response = self.client.po
-    """
 if __name__ == "__main__":
     unittest.main()

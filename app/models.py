@@ -1,10 +1,6 @@
 from app import db, app
-from sqlalchemy.dialects.postgresql import JSON
-from itsdangerous import (TimedJSONWebSignatureSerializer as
-                          Serializer, BadSignature,
-                          SignatureExpired)
 from datetime import datetime, timedelta
-import traceback
+# import traceback
 import jwt
 
 
@@ -43,7 +39,6 @@ class Users(db.Model):
                 'sub': self.id
             }
             # create the byte string token using the payload and the SECRET key
-            print(app.config['SECRET_KEY'])
             jwt_string = jwt.encode(
                 payload,
                 app.config['SECRET_KEY'],
@@ -51,21 +46,17 @@ class Users(db.Model):
             )
             return jwt_string
         except Exception as ex:
-            traceback.print_exc()
-            print(self.id)
             return str(ex)
 
     @staticmethod
     def decode_token(token):
         try:
             payload = jwt.decode(token, app.config['SECRET_KEY'])
-            #print(">>>", payload)
             return payload['sub']
         except jwt.ExpiredSignatureError:
             return "The token is expired"
         except jwt.InvalidTokenError:
             return "Invalid token"
-
 
     def __repr__(self):
         return '<Users %s>' % self.user_username
