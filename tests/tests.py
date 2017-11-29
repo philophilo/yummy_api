@@ -187,6 +187,19 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'Recipe created')
 
+    def test_view_recipe_in_category(self):
+        self.create_user()
+        self.create_category()
+        self.create_recipe()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.get('/category/recipes/1',
+                                       content_type='application/json',
+                                       headers=headers)
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['count'], '1')
+            self.assertTrue(reply['recipes'], msg='no recipes')
+
 
 if __name__ == "__main__":
     unittest.main()
