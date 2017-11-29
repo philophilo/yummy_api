@@ -94,7 +94,7 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Incorrect username or password')
 
-    def test_creat_category(self):
+    def test_create_category(self):
         self.create_user()
         with self.client:
             headers = self.helper_login_with_token()
@@ -107,6 +107,19 @@ class TestYummyApi(TestCase):
             self.assertEqual(reply['category_name'], "Meat")
             self.assertEqual(reply['message'], 'category created')
             self.assertTrue(reply['id'], msg='no id')
+
+    def test_view_categories(self):
+        self.create_user()
+        self.create_category()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.get('/category',
+                                       content_type='application/json',
+                                       headers=headers)
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['count'], "1")
+            self.assertEqual(reply['message'], 'categories found')
+            self.assertTrue(reply['categories'], msg='no categories')
 
 
 if __name__ == "__main__":
