@@ -1,22 +1,12 @@
-from app import app, login_manager
+from app import app
 from flask import request, abort, jsonify
 from app.models import Users, Category, Recipes
 from sqlalchemy.exc import IntegrityError
 from werkzeug.security import (generate_password_hash,
                                check_password_hash)
-from flask_login import (login_user, login_required,
-                         logout_user)
 from datetime import datetime
 import traceback
 # import pdb
-
-
-login_manager.login_view = '/'
-
-
-@login_manager.user_loader
-def load_user(user_username):
-    return Users.query.filter_by(user_username=user_username).first()
 
 
 def check_crap(val):
@@ -111,8 +101,6 @@ def login():
                             user_details['password'])):
                         # generate token
                         token = user.generate_auth_token()
-                        print(">>>", user.user_username)
-                        login_user(user)
                         if token:
                             return jsonify(
                                 {'token': token.decode('ascii'),
@@ -137,17 +125,7 @@ def login():
                    ), 400
 
 
-@app.route('/auth/logout', methods=['POST'])
-@login_required
-def logout():
-    # pdb.set_trace()
-    logout_user()
-    return jsonify({'message':
-                    'logout was successful'}), 200
-
-
 @app.route('/category', methods=['POST'])
-@login_required
 def create_category():
     # pdb.set_trace()
     token = check_token()
@@ -180,7 +158,6 @@ def create_category():
 
 
 @app.route('/category', methods=['GET'])
-@login_required
 def view_all_categories():
     token = check_token()
     if token:

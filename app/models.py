@@ -61,22 +61,6 @@ class Users(db.Model):
     def __repr__(self):
         return '<Users %s>' % self.user_username
 
-    # flask login properties
-    @property
-    def is_authenticated(self):
-        return True
-
-    @property
-    def is_active(self):
-        return True
-
-    @property
-    def is_anonymous(self):
-        return False
-
-    def get_id(self):
-        return str(self.user_username)
-
 
 class Category(db.Model):
     __tablename__ = 'category'
