@@ -38,6 +38,20 @@ class TestYummyApi(TestCase):
                                 date=datetime.now())
         recipe.add()
 
+    def helper_login(self):
+        response = self.client.post('/auth/login',
+                                    content_type='application/json',
+                                    data=json.dumps(
+                                        dict(username='user',
+                                             password="pass")))
+        return response
+
+    def helper_login_with_token(self):
+        reply = json.loads(self.helper_login().data.decode())
+        bearer = 'Bearer {}'.format(reply['token'])
+        headers = {'Authorization': bearer}
+        return headers
+
     def setUp(self):
         db.create_all()
         db.session.commit()
