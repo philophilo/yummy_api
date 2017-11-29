@@ -58,6 +58,17 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['username'], "user", msg="username key fail")
 
+    def test_existing_user_account(self):
+        self.create_user()
+        with self.client:
+            response = self.client.post('/auth/register',
+                                        content_type='application/json',
+                                        data=json.dumps(dict(username='user',
+                                                             name='name',
+                                                             password='pass')))
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['message'], 'The username already exits')
+
 
 if __name__ == "__main__":
     unittest.main()
