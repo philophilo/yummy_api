@@ -212,6 +212,36 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'category not found')
 
+    def test_updating_known_recipe(self):
+        self.create_user()
+        self.create_category()
+        self.create_recipe()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.put('/category/recipes/1/1',
+                                       content_type='application/json',
+                                       headers=headers,
+                                       data=json.dumps(
+                                           dict(recipe_name="Ugandan beef",
+                                                ingredients="beef, onions")))
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['message'], 'Recipe updated')
+
+    def test_updating_unknown_recipe(self):
+        self.create_user()
+        self.create_category()
+        self.create_recipe()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.put('/category/recipes/1/1',
+                                       content_type='application/json',
+                                       headers=headers,
+                                       data=json.dumps(
+                                           dict(recipe_name="Ugandan beef",
+                                                ingredients="beef, onions")))
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['message'], 'Recipe updated')
+
 
 if __name__ == "__main__":
     unittest.main()
