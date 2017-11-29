@@ -94,6 +94,20 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Incorrect username or password')
 
+    def test_creat_category(self):
+        self.create_user()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.post('/category',
+                                        content_type='application/json',
+                                        headers=headers,
+                                        data=json.dumps(
+                                            dict(category_name='Meat')))
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['category_name'], "Meat")
+            self.assertEqual(reply['message'], 'category created')
+            self.assertTrue(reply['id'], msg='no id')
+
 
 if __name__ == "__main__":
     unittest.main()
