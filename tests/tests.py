@@ -69,6 +69,17 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'The username already exits')
 
+    def test_wrong_user_login_credentials(self):
+        self.create_user()
+        with self.client:
+            response = self.client.post('/auth/login',
+                                        content_type='application/json',
+                                        data=json.dumps(
+                                            dict(username='user1',
+                                                 password='password')))
+            reply = json.loads(response.data.decode())
+            self.assertTrue(reply['message'], 'Incorrect username or password')
+
 
 if __name__ == "__main__":
     unittest.main()
