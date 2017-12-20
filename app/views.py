@@ -44,6 +44,7 @@ def check_token():
 @app.route('/auth/register', methods=['POST'])
 def user_register():
     if request.headers.get('content-type') == 'application/json':
+        print("there", "...")
         info = request.json
         try:
             user_details = {
@@ -74,8 +75,13 @@ def user_register():
             return jsonify({'message':
                             'The username already exits'}), 500
 
+        except ValueError as ex:
+            return jsonify({'message', str(ex)}), 400
+
         except Exception as ex:
             return jsonify({'message': str(ex)}), 500
+    else:
+        return jsonify({'message', 'Please specify json data'})
     return jsonify({'message': 'User registration'}), 201
 
 
@@ -157,20 +163,22 @@ def create_category():
         return jsonify({'message': 'no access token'}), 400
 
 
-@app.route('/category', methods=['GET'])
+@app.route('/category/', methods=['GET'])
 def view_all_categories():
     token = check_token()
     if token:
         try:
             user_id = Users.decode_token(token)
             if isinstance(int(user_id), int):
-                user_categories = Category.query.filter_by(user_id=user_id)
+                user_categories = Category.query.filter_by(
+                    user_id=user_id)
+
                 if user_categories is not None:
                     results = []
-                    for category in user_categories:
+                    for category in user_categories.items:
                         result = {
                             'id': category.cat_id,
-                            'category_name': category.cat_name
+                            'category_name': category.cat_name,
                         }
                         results.append(result)
                     return jsonify({'categories': results,
@@ -181,9 +189,7 @@ def view_all_categories():
                                 }), 404
             abort(401)
         except Exception as ex:
-            print(ex, "<<<category error")
-            traceback.print_exc()
-            return jsonify({'message': 'ex'}), 500
+            return jsonify({'message': str(ex)}), 500
     return jsonify({'message': 'no access token'}), 500
 
 

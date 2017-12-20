@@ -9,7 +9,6 @@ app = Flask(__name__)
 swagger = Swagger(app)
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 app.config.from_object(DevelopingConfig)
-app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 db = SQLAlchemy(app)
 
 

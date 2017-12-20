@@ -1,5 +1,6 @@
 import unittest
 from app import app, db, models
+from app.config import TestingConfig
 import json
 from werkzeug.security import generate_password_hash
 from datetime import datetime
@@ -53,6 +54,7 @@ class TestYummyApi(TestCase):
         return headers
 
     def setUp(self):
+        app.config.from_object(TestingConfig)
         db.create_all()
         db.session.commit()
 
@@ -119,6 +121,9 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['count'], "1")
             self.assertEqual(reply['message'], 'categories found')
+            self.assertEqual(reply['number_of_pages'], 1)
+            self.assertEqual(reply['current_page'], 1)
+            self.assertEqual(reply['next_page'], 'null')
             self.assertTrue(reply['categories'], msg='no categories')
 
     def test_view_one_existing_category(self):

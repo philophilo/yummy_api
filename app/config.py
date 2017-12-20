@@ -8,7 +8,7 @@ class Config(object):
     TESTING = False
     CSRF_ENABLED = True
     SECRET_KEY = 'this is the secrete'
-    SQLALCHEMY_DATABASE_URI = "postgresql://philophilo:philophilo@localhost/yummy"
+    SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 
 class ProductionConfig(Config):
@@ -21,9 +21,11 @@ class StagingConfig(Config):
 
 
 class DevelopingConfig(Config):
+    SQLALCHEMY_DATABASE_URI = "postgresql://philophilo:philophilo@localhost/yummy"
     DEVELOPING = True
     DEBUG = True
 
 
 class TestingConfig(Config):
+    SQLALCHEMY_DATABASE_URI = "postgresql://philophilo:philophilo@localhost/test_yummy"
     TESTING = True
