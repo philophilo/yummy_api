@@ -96,7 +96,11 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Incorrect username or password')
 
+    # testing categories
     def test_create_category(self):
+        """
+        Test the creation of a category
+        """
         self.create_user()
         with self.client:
             headers = self.helper_login_with_token()
@@ -111,6 +115,9 @@ class TestYummyApi(TestCase):
             self.assertTrue(reply['id'], msg='no id')
 
     def test_view_categories(self):
+        """
+        Test the viewing of all categories at once with pagination
+        """
         self.create_user()
         self.create_category()
         with self.client:
@@ -118,12 +125,14 @@ class TestYummyApi(TestCase):
             response = self.client.get('/category',
                                        content_type='application/json',
                                        headers=headers)
+            print(response, '=======')
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['count'], "1")
             self.assertEqual(reply['message'], 'categories found')
             self.assertEqual(reply['number_of_pages'], 1)
             self.assertEqual(reply['current_page'], 1)
-            self.assertEqual(reply['next_page'], 'null')
+            self.assertEqual(reply['next_page'], None)
+            self.assertEqual(reply['previous_page'], None)
             self.assertTrue(reply['categories'], msg='no categories')
 
     def test_view_one_existing_category(self):

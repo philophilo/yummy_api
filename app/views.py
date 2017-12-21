@@ -44,7 +44,6 @@ def check_token():
 @app.route('/auth/register', methods=['POST'])
 def user_register():
     if request.headers.get('content-type') == 'application/json':
-        print("there", "...")
         info = request.json
         try:
             user_details = {
@@ -81,7 +80,7 @@ def user_register():
         except Exception as ex:
             return jsonify({'message': str(ex)}), 500
     else:
-        return jsonify({'message', 'Please specify json data'})
+        return jsonify({'message': 'Please specify json data'})
     return jsonify({'message': 'User registration'}), 201
 
 
@@ -124,8 +123,8 @@ def login():
                            ), 400
 
         except Exception as ex:
-            print(ex)
-            traceback.print_exc()
+            return jsonify({'message': str(ex)})
+
     return jsonify({'message':
                     'content-type not specified as application/json'}
                    ), 400
@@ -163,18 +162,23 @@ def create_category():
         return jsonify({'message': 'no access token'}), 400
 
 
-@app.route('/category/', methods=['GET'])
+@app.route('/category', methods=['GET'])
 def view_all_categories():
     token = check_token()
     if token:
         try:
             user_id = Users.decode_token(token)
+            page = int(request.args.get('page', 1))
+            per_page = int(request.args.get('per_page', 5))
             if isinstance(int(user_id), int):
                 user_categories = Category.query.filter_by(
-                    user_id=user_id)
-
+                    user_id=user_id).paginate(page, per_page, False)
                 if user_categories is not None:
                     results = []
+                    current_page = user_categories.page
+                    number_of_pages = user_categories.pages
+                    next_page = user_categories.next_num
+                    previous_page = user_categories.prev_num
                     for category in user_categories.items:
                         result = {
                             'id': category.cat_id,
@@ -183,7 +187,11 @@ def view_all_categories():
                         results.append(result)
                     return jsonify({'categories': results,
                                     'count': str(len(results)),
-                                    'message': 'categories found'})
+                                    'current_page': current_page,
+                                    'number_of_pages': number_of_pages,
+                                    'next_page': next_page,
+                                    'previous_page': previous_page,
+                                    'message': 'categories found'}), 200
                 return jsonify({'count': '0',
                                 'message': 'no categories found'
                                 }), 404
