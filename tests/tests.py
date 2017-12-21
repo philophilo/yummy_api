@@ -202,6 +202,9 @@ class TestYummyApi(TestCase):
             self.assertEqual(reply['message'], 'Recipe created')
 
     def test_view_recipe_in_category(self):
+        """
+        Test viewing recipes in a category with pagination
+        """
         self.create_user()
         self.create_category()
         self.create_recipe()
@@ -212,6 +215,10 @@ class TestYummyApi(TestCase):
                                        headers=headers)
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['count'], '1')
+            self.assertEqual(reply['number_of_pages'], 1)
+            self.assertEqual(reply['current_page'], 1)
+            self.assertEqual(reply['next_page'], None)
+            self.assertEqual(reply['previous_page'], None)
             self.assertTrue(reply['recipes'], msg='no recipes')
 
     def test_view_recipe_from_unknown_category(self):
