@@ -463,3 +463,48 @@ def search_categories():
     return jsonify({'message': 'no access token'}), 500
 
 
+@app.route('/recipes/search/', methods=['GET'])
+def search_recipes():
+    token = check_token()
+    if token:
+        try:
+            # TODO validate the search parameters
+            q = str(request.args.get('q', '')).title()
+            page = int(request.args.get('page', 1))
+            per_page = int(request.args.get('per_page', 5))
+            user_id = Users.decode_token(token)
+            # check if user_id is an integer
+            if isinstance(int(user_id), int):
+                found_recipes = Category.query.join(
+                    Recipes, Category.cat_id==Recipes.rec_cat).add_columns(
+                        Category.cat_id, Category.user_id,
+                        Category.cat_name, Recipes.rec_id, Recipes.rec_name,
+                        Recipes.rec_ingredients).filter(
+                            Category.user_id == user_id).filter(
+                                Recipes.rec_name.like('%'+q+'%')).paginate(
+                                    page, per_page, False)
+                current_page = found_recipes.page
+                number_of_pages = found_recipes.pages
+                next_page = found_recipes.next_num
+                previous_page = found_recipes.prev_num
+                print(">>>>>", found_recipes)
+                results = []
+                for recipe in found_recipes.items:
+                    result = {
+                        'category_id':recipe.cat_id,
+                        'category_name': recipe.cat_name,
+                        'recipe_id':recipe.rec_id,
+                        'recipe_name':recipe.rec_name,
+                        'recipes_ingredients':recipe.rec_ingredients
+                    }
+                    results.append(result)
+                return jsonify({'categories': results,
+                                'count': str(len(results)),
+                                'current_page': current_page,
+                                'number_of_pages': number_of_pages,
+                                'next_page': next_page,
+                                'previous_page': previous_page,
+                                'message': 'Recipes found'})
+        except Exception as ex:
+            return jsonify({'message': str(ex)})
+    return jsonify({'message': 'no access token'}), 500
