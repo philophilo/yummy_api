@@ -355,5 +355,18 @@ class TestYummyApi(TestCase):
             self.assertEqual(reply['message'], 'Categories found')
 
 
+    def test_searching_recipes(self):
+        self.create_user()
+        self.create_category()
+        self.create_recipe()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.get('/recipes/search/?=local',
+                                       content_type='application/json',
+                                       headers=headers)
+            reply = json.loads(response.data.decode())
+            print('=========<<<<', reply)
+            self.assertEqual(reply['message'], 'Recipes found')
+
 if __name__ == "__main__":
     unittest.main()
