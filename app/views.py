@@ -2,6 +2,7 @@ from app import app
 from flask import request, abort, jsonify
 from app.models import Users, Category, Recipes
 from sqlalchemy.exc import IntegrityError
+from sqlalchemy import and_
 from werkzeug.security import (generate_password_hash,
                                check_password_hash)
 from datetime import datetime
@@ -129,6 +130,13 @@ def login():
                     'content-type not specified as application/json'}
                    ), 400
 
+
+@app.route('/auth/reset-password', methods=['POST'])
+def reset_password():
+    token = check_token()
+    if token:
+        print(token)
+    return jsonify({'message':'reset password'})
 
 @app.route('/category', methods=['POST'])
 def create_category():
@@ -363,14 +371,21 @@ def view_category_recipes(category_id):
     if token:
         try:
             user_id = Users.decode_token(token)
+            page = int(request.args.get('page', 1))
+            per_page = int(request.args.get('per_page', 5))
             if isinstance(int(user_id), int):
                 user_categories = Category.query.filter_by(
                     cat_id=category_id).first()
                 if user_categories is not None:
-                    user_recipes = Recipes.query.filter_by(rec_cat=category_id)
+                    user_recipes = Recipes.query.filter_by(
+                        rec_cat=category_id).paginate(page, per_page, False)
+                    current_page = user_recipes.page
+                    number_of_pages = user_recipes.pages
+                    next_page = user_recipes.next_num
+                    previous_page = user_recipes.prev_num
                     if user_recipes is not None:
                         results = []
-                        for recipe in user_recipes:
+                        for recipe in user_recipes.items:
                             result = {
                                 'id': recipe.rec_id,
                                 'recipe_name': recipe.rec_name,
@@ -378,7 +393,12 @@ def view_category_recipes(category_id):
                             }
                             results.append(result)
                         return jsonify({'recipes': results,
-                                        'count': str(len(results))}), 200
+                                        'count': str(len(results)),
+                                        'current_page': current_page,
+                                        'number_of_pages': number_of_pages,
+                                        'next_page': next_page,
+                                        'previous_page': previous_page,
+                                        'messages': 'recipes found'}), 200
                     return jsonify({'message': 'no recipes found'}), 404
                 return jsonify({'message': 'category not found'}), 404
             abort(401)
@@ -411,3 +431,4 @@ def view_one_recipe(recipe_id):
         except Exception as ex:
             return jsonify({'message': str(ex)}), 500
     return jsonify({'message': 'no access token'}), 500
+

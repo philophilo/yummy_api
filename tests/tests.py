@@ -213,6 +213,7 @@ class TestYummyApi(TestCase):
             response = self.client.get('/category/recipes/1',
                                        content_type='application/json',
                                        headers=headers)
+            print(response, "===============<<<<")
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['count'], '1')
             self.assertEqual(reply['number_of_pages'], 1)
@@ -222,6 +223,9 @@ class TestYummyApi(TestCase):
             self.assertTrue(reply['recipes'], msg='no recipes')
 
     def test_view_recipe_from_unknown_category(self):
+        """
+        Test viewing recipe in a category that doesnot exits
+        """
         self.create_user()
         self.create_category()
         self.create_recipe()
@@ -234,6 +238,9 @@ class TestYummyApi(TestCase):
             self.assertEqual(reply['message'], 'category not found')
 
     def test_updating_known_recipe(self):
+        """
+        Test updating recipe with a known id (key)
+        """
         self.create_user()
         self.create_category()
         self.create_recipe()
@@ -332,6 +339,20 @@ class TestYummyApi(TestCase):
                                               dict(category_name="Meat")))
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'category deleted')
+
+    # ----search tests
+    def test_searching_categories(self):
+        self.create_user()
+        self.create_category()
+        self.create_recipe()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.get('/category/search/?q=Meat',
+                                            content_type='application/json',
+                                            headers=headers)
+            print(response, '=====>')
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['message'], 'Categories found')
 
 
 if __name__ == "__main__":
