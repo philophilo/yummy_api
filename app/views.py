@@ -432,3 +432,34 @@ def view_one_recipe(recipe_id):
             return jsonify({'message': str(ex)}), 500
     return jsonify({'message': 'no access token'}), 500
 
+
+@app.route('/category/search/', methods=['GET'])
+def search_categories():
+    token = check_token()
+    if token:
+        try:
+            # TODO validate the search parameters
+            q = str(request.args.get('q', '')).title()
+            page = int(request.args.get('page', 1))
+            per_page = int(request.args.get('per_page', 5))
+            user_id = Users.decode_token(token)
+            if isinstance(int(user_id), int):
+                user_categories = Category.query.filter(and_(
+                    Category.user_id == user_id,
+                    Category.cat_name.like('%'+q+'%'))).paginate(
+                        page, per_page, False)
+                if user_categories is not None:
+                    results = []
+                    for category in user_categories.items:
+                        result = {
+                            'id': category.cat_id,
+                            'category_name': category.cat_name,
+                        }
+                        results.append(result)
+                return jsonify({'categories': results,
+                                'message': 'Categories found'})
+        except Exception as ex:
+            return jsonify({'message': str(ex)})
+    return jsonify({'message': 'no access token'}), 500
+
+
