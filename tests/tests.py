@@ -103,8 +103,8 @@ class TestYummyApi(TestCase):
             response = self.client.post('/auth/reset-password',
                                         content_type='application/json',
                                         data=json.dumps(
-                                            dict(new_password='pass',
-                                                 confirm_password='pass')))
+                                            dict(new_password='pass123',
+                                                 confirm_password='pass123')))
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Please enter current password')
 
@@ -115,7 +115,7 @@ class TestYummyApi(TestCase):
                                         content_type='application/json',
                                         data=json.dumps(
                                             dict(password='password',
-                                                 confirm_password='pass')))
+                                                 confirm_password='pass123')))
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Incorrect Password')
 
@@ -135,8 +135,8 @@ class TestYummyApi(TestCase):
             response = self.client.post('/auth/reset-password',
                                         content_type='application/json',
                                         data=json.dumps(
-                                            dict(password='password',
-                                                 new_password='pass')))
+                                            dict(password='pass',
+                                                 new_password='pass123')))
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Please confirm your new password')
 
@@ -146,11 +146,24 @@ class TestYummyApi(TestCase):
             response = self.client.post('/auth/reset-password',
                                         content_type='application/json',
                                         data=json.dumps(
-                                            dict(password='password',
-                                                 new_password='pass',
+                                            dict(password='pass',
+                                                 new_password='pass12',
                                                  confirm_password='pass123')))
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Passwords do not match')
+
+    def test_password_reset_success(self):
+        self.create_user()
+        with self.client:
+            response = self.client.post('/auth/reset-password',
+                                        content_type='application/json',
+                                        data=json.dumps(
+                                            dict(password='pass',
+                                                 new_password='pass123',
+                                                 confirm_password='pass123')))
+            reply = json.loads(response.data.decode())
+            self.assertTrue(reply['message'], 'Your password was successfully rest')
+
     # testing categories
     def test_create_category(self):
         """
