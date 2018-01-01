@@ -96,6 +96,19 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Incorrect username or password')
 
+    # -----testing password reset
+    def test_password_reset_without_password_key(self):
+        self.create_user()
+        with self.client:
+            response = self.client.post('/auth/reset-password',
+                                        content_type='application/json',
+                                        data=json.dumps(
+                                            dict(new_password='pass',
+                                                 confirm_password='pass')))
+            reply = json.loads(response.data.decode())
+            self.assertTrue(reply['message'], 'Please enter current password')
+
+
     # testing categories
     def test_create_category(self):
         """
@@ -367,6 +380,7 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             print('=========<<<<', reply)
             self.assertEqual(reply['message'], 'Recipes found')
+
 
 if __name__ == "__main__":
     unittest.main()

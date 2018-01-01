@@ -3,7 +3,7 @@ from datetime import datetime, timedelta
 # import traceback
 import jwt
 
-
+# TODO determine nullables in the models
 class Users(db.Model):
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)

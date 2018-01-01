@@ -44,6 +44,56 @@ def check_token():
 
 @app.route('/auth/register', methods=['POST'])
 def user_register():
+    """Example endpoint returning a list of colors by palette
+    This is using docstrings for specifications.
+    ---
+
+    parameters:
+      - name: username
+        in: path
+        type: string
+        required: true
+        description: User's nickname on yummy recipes
+      - name: password
+        in: path
+        type: string
+        description: User's password for your recipes
+        required: true
+    definitions:
+      Palette:
+        type: object
+        properties:
+          palette_name:
+            type: array
+            items:
+              $ref: '#/definitions/Color'
+      Color:
+        type: string
+
+    requestBody:
+        description: Optional description in *Markdown*
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/Pet'
+          application/xml:
+            schema:
+              $ref: '#/components/schemas/Pet'
+          application/x-www-form-urlencoded:
+            schema:
+              $ref: '#/components/schemas/PetForm'
+          text/plain:
+            schema:
+              type: string
+    responses:
+      200:
+        description: A list of colors (may be filtered by palette)
+        schema:
+          $ref: '#/definitions/Palette'
+        examples:
+          rgb: ['red', 'green', 'blue']
+    """
     if request.headers.get('content-type') == 'application/json':
         info = request.json
         try:
@@ -129,14 +179,6 @@ def login():
     return jsonify({'message':
                     'content-type not specified as application/json'}
                    ), 400
-
-
-@app.route('/auth/reset-password', methods=['POST'])
-def reset_password():
-    token = check_token()
-    if token:
-        print(token)
-    return jsonify({'message':'reset password'})
 
 @app.route('/category', methods=['POST'])
 def create_category():
