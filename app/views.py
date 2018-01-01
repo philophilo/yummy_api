@@ -180,6 +180,8 @@ def login():
                     'content-type not specified as application/json'}
                    ), 400
 
+
+
 @app.route('/category', methods=['POST'])
 def create_category():
     # pdb.set_trace()
