@@ -140,6 +140,17 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Please confirm your new password')
 
+    def test_password_reset_with_unmatching_passwords(self):
+        self.create_user()
+        with self.client:
+            response = self.client.post('/auth/reset-password',
+                                        content_type='application/json',
+                                        data=json.dumps(
+                                            dict(password='password',
+                                                 new_password='pass',
+                                                 confirm_password='pass123')))
+            reply = json.loads(response.data.decode())
+            self.assertTrue(reply['message'], 'Passwords do not match')
     # testing categories
     def test_create_category(self):
         """
