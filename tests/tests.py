@@ -108,6 +108,17 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertTrue(reply['message'], 'Please enter current password')
 
+    def test_password_reset_with_wrong_password(self):
+        self.create_user()
+        with self.client:
+            response = self.client.post('/auth/reset-password',
+                                        content_type='application/json',
+                                        data=json.dumps(
+                                            dict(password='password',
+                                                 confirm_password='pass')))
+            reply = json.loads(response.data.decode())
+            self.assertTrue(reply['message'], 'Please specify your new password')
+
 
     # testing categories
     def test_create_category(self):
