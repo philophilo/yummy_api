@@ -197,7 +197,12 @@ def reset_password():
                     # if user is not None:
                     if check_password_hash(user.user_password,
                                         data['password']):
-                        return jsonify({'message': data['password']})
+                        if 'new_password' in data:
+                            print("passed")
+                        else:
+                            return jsonify({'message':
+                                            'Please specify your new '+
+                                            'password'})
                     else:
                         return jsonify({'message':'Incorrect password'})
 #                    else:
@@ -207,6 +212,7 @@ def reset_password():
             else:
                 return jsonify({'message':'Please enter current password'})
         print(token)
+    return jsonify({'message':'reset password'})
 
 @app.route('/category', methods=['POST'])
 def create_category():
