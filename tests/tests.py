@@ -100,69 +100,82 @@ class TestYummyApi(TestCase):
     def test_password_reset_without_password_key(self):
         self.create_user()
         with self.client:
+            headers = self.helper_login_with_token()
             response = self.client.post('/auth/reset-password',
                                         content_type='application/json',
+                                        headers = headers,
                                         data=json.dumps(
                                             dict(new_password='pass123',
                                                  confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertTrue(reply['message'], 'Please enter current password')
+            self.assertEqual(reply['message'], 'Please enter current password')
 
     def test_password_reset_with_wrong_password(self):
         self.create_user()
         with self.client:
+            headers = self.helper_login_with_token()
             response = self.client.post('/auth/reset-password',
                                         content_type='application/json',
+                                        headers = headers,
                                         data=json.dumps(
                                             dict(password='password',
+                                                 new_password='pass123',
                                                  confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertTrue(reply['message'], 'Incorrect Password')
+            self.assertEqual(reply['message'], 'Incorrect Password')
 
     def test_password_reset_without_new_password_key(self):
         self.create_user()
         with self.client:
+            headers = self.helper_login_with_token()
             response = self.client.post('/auth/reset-password',
                                         content_type='application/json',
+                                        headers = headers,
                                         data=json.dumps(
                                             dict(password='pass')))
             reply = json.loads(response.data.decode())
-            self.assertTrue(reply['message'], 'Please specify your new password')
+            self.assertEqual(reply['message'], 'Please specify your new password')
 
     def test_password_reset_without_confirming_new_password(self):
         self.create_user()
         with self.client:
+            headers = self.helper_login_with_token()
             response = self.client.post('/auth/reset-password',
                                         content_type='application/json',
+                                        headers = headers,
                                         data=json.dumps(
                                             dict(password='pass',
                                                  new_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertTrue(reply['message'], 'Please confirm your new password')
+            self.assertEqual(reply['message'], 'Please confirm your new password')
 
     def test_password_reset_with_unmatching_passwords(self):
         self.create_user()
         with self.client:
+            headers = self.helper_login_with_token()
             response = self.client.post('/auth/reset-password',
                                         content_type='application/json',
+                                        headers = headers,
                                         data=json.dumps(
                                             dict(password='pass',
                                                  new_password='pass12',
                                                  confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertTrue(reply['message'], 'Passwords do not match')
+            self.assertEqual(reply['message'], 'Passwords do not match')
 
     def test_password_reset_success(self):
         self.create_user()
         with self.client:
+            headers = self.helper_login_with_token()
             response = self.client.post('/auth/reset-password',
                                         content_type='application/json',
+                                        headers = headers,
                                         data=json.dumps(
                                             dict(password='pass',
                                                  new_password='pass123',
                                                  confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertTrue(reply['message'], 'Your password was successfully rest')
+            self.assertEqual(reply['message'], 'Your password was successfully rest')
 
     # testing categories
     def test_create_category(self):

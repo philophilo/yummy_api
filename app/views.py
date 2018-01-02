@@ -181,6 +181,19 @@ def login():
                    ), 400
 
 
+@app.route('/auth/reset-password', methods=['POST'])
+def reset_password():
+    token = check_token()
+    if token:
+        user_id = Users.decode_token(token)
+        if isinstance(int(user_id), int):
+            data = request.json
+            # check for original password in data
+            if 'password' in data:
+                return jsonify({'message': 'correct'})
+            else:
+                return jsonify({'message':'Please enter current password'})
+        print(token)
 
 @app.route('/category', methods=['POST'])
 def create_category():
