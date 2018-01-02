@@ -190,7 +190,20 @@ def reset_password():
             data = request.json
             # check for original password in data
             if 'password' in data:
-                return jsonify({'message': 'correct'})
+                try:
+                    # get the user object based on authenticated user id
+                    user = Users.query.filter_by(
+                                    id=user_id).first()
+                    # if user is not None:
+                    if check_password_hash(user.user_password,
+                                        data['password']):
+                        return jsonify({'message': data['password']})
+                    else:
+                        return jsonify({'message':'Incorrect password'})
+#                    else:
+#                        return jsonify({'message': 'Unknown user'})
+                except Exception as ex:
+                    return jsonify({'message':str(ex)})
             else:
                 return jsonify({'message':'Please enter current password'})
         print(token)

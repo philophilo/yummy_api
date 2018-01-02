@@ -122,7 +122,7 @@ class TestYummyApi(TestCase):
                                                  new_password='pass123',
                                                  confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'Incorrect Password')
+            self.assertEqual(reply['message'], 'Incorrect password')
 
     def test_password_reset_without_new_password_key(self):
         self.create_user()
