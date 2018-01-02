@@ -175,7 +175,7 @@ class TestYummyApi(TestCase):
                                                  new_password='pass123',
                                                  confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'Your password was successfully rest')
+            self.assertEqual(reply['message'], 'Your password was successfully reset')
 
     # testing categories
     def test_create_category(self):

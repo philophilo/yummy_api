@@ -201,7 +201,11 @@ def reset_password():
                             if 'confirm_password' in data:
                                 if data['new_password'] \
                                         == data['confirm_password']:
-                                    print("equal")
+                                    user.password = data['new_password']
+                                    user.update()
+                                    return jsonify({'message':
+                                                    'Your password was '+
+                                                    'successfully reset'})
                                 else:
                                     return jsonify({'message':
                                                     'Passwords do not '+
