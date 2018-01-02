@@ -198,7 +198,12 @@ def reset_password():
                     if check_password_hash(user.user_password,
                                         data['password']):
                         if 'new_password' in data:
-                            print("passed")
+                            if 'confirm_password' in data:
+                                print('confirmed')
+                            else:
+                                return jsonify({'message':
+                                                'Please confirm your '+
+                                                'new password'})
                         else:
                             return jsonify({'message':
                                             'Please specify your new '+
