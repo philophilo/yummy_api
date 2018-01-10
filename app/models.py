@@ -1,5 +1,6 @@
 from app import db, app
 from datetime import datetime, timedelta
+from sqlalchemy.exc import IntegrityError
 # import traceback
 import jwt
 
@@ -46,20 +47,48 @@ class Users(db.Model):
             )
             return jwt_string
         except Exception as ex:
-            return str(ex)
+            raise Exception(ex)
+    @staticmethod
+    def check_not_blacklisted(token):
+        """Check that the token is not in the blacklist table"""
+        blacklist = Blacklist.query.filter_by(token=token).first()
+        if blacklist is not None:
+            if blacklist.token ==  token:
+                return False
+        return True
 
     @staticmethod
     def decode_token(token):
         try:
-            payload = jwt.decode(token, app.config['SECRET_KEY'])
-            return payload['sub']
+            if Users.check_not_blacklisted(token):
+                payload = jwt.decode(token, app.config['SECRET_KEY'])
+                return payload['sub']
+            else:
+                raise ValueError('Invalid token')
         except jwt.ExpiredSignatureError:
-            return "The token is expired"
+            raise jwt.ExpiredSignatureError("The token is expired")
         except jwt.InvalidTokenError:
-            return "Invalid token"
+            return jwt.InvalidTokenError("Invalid token")
+
 
     def __repr__(self):
         return '<Users %s>' % self.user_username
+
+    # flask_login properties
+    @property
+    def is_authenticated(self):
+        return True
+
+    @property
+    def is_active(self):
+        return True
+
+    @property
+    def is_anonymous(self):
+        return False
+
+    def get_id(self):
+        return str(self.user_username)
 
 
 class Category(db.Model):
@@ -119,3 +148,30 @@ class Recipes(db.Model):
 
     def __repr__(self):
         return '<Recipes %s>' % self.rec_name
+
+
+class Blacklist(db.Model):
+    __tablename__ = 'blacklist'
+    id = db.Column(db.Integer, primary_key=True)
+    token = db.Column(db.String(200))
+    date = db.Column(db.DateTime, nullable=False)
+
+    def __init__(self, token, date):
+        self.token = token
+        self.date = date
+
+
+    def add(self):
+        db.session.add(self)
+        db.session.commit()
+
+    @staticmethod
+    def update():
+        db.session.commit()
+
+    def delete(self):
+        db.session.delete(self)
+        db.session.commit()
+
+    def __repr__(self):
+        return '<Blacklist %s>' % self.token

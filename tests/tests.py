@@ -5,6 +5,7 @@ import json
 from werkzeug.security import generate_password_hash
 from datetime import datetime
 from flask_testing import TestCase
+import urllib.request as urllib2
 
 
 class TestYummyApi(TestCase):
@@ -83,7 +84,7 @@ class TestYummyApi(TestCase):
                                                              name='fname lname',
                                                              password='Pass1!')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'The username already exits')
+            self.assertEqual(reply['Error'], 'The username already exits')
 
     def test_wrong_user_login_credentials(self):
         self.create_user()
@@ -94,7 +95,7 @@ class TestYummyApi(TestCase):
                                             dict(username='user1',
                                                  password='password')))
             reply = json.loads(response.data.decode())
-            self.assertTrue(reply['message'], 'Incorrect username or password')
+            self.assertTrue(reply['Error'], 'Incorrect username or password')
 
     # -----testing password reset
     def test_password_reset_without_password_key(self):
@@ -108,7 +109,8 @@ class TestYummyApi(TestCase):
                                             dict(new_password='pass123',
                                                  confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'password key missing')
+            print(reply, "===========<<")
+            self.assertEqual(reply['Error'], 'password key missing')
 
     def test_password_reset_with_wrong_password(self):
         self.create_user()
@@ -134,7 +136,7 @@ class TestYummyApi(TestCase):
                                         data=json.dumps(
                                             dict(password='pass')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'new_password key missing')
+            self.assertEqual(reply['Error'], 'new_password key missing')
 
     def test_password_reset_without_confirming_new_password(self):
         self.create_user()
@@ -147,7 +149,7 @@ class TestYummyApi(TestCase):
                                             dict(password='pass',
                                                  new_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'confirm_password key missing')
+            self.assertEqual(reply['Error'], 'confirm_password key missing')
 
     def test_password_reset_with_unmatching_passwords(self):
         self.create_user()
@@ -224,7 +226,6 @@ class TestYummyApi(TestCase):
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())
-            print('======>', reply)
             self.assertEqual(reply['message'], 'category found')
             self.assertEqual(reply['category_name'], 'Meat')
 
@@ -268,6 +269,7 @@ class TestYummyApi(TestCase):
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'category not found')
 
+    # -----recipe tests
     def test_create_recipe(self):
         self.create_user()
         self.create_category()
@@ -351,7 +353,6 @@ class TestYummyApi(TestCase):
                                                 recipe_category_id=1,
                                                 ingredients="beef, onions")))
             reply = json.loads(response.data.decode())
-            print("========>", reply)
             self.assertEqual(reply['message'], 'Recipe updated')
 
     def test_deleting_known_recipe(self):
@@ -365,8 +366,7 @@ class TestYummyApi(TestCase):
                                           headers=headers,
                                           data=json.dumps(
                                               dict(recipe_name="Ugandan beef")))
-            reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'Recipe deleted')
+            self.assertEqual(response.status_code, 204)
 
     def test_deleting_unknown_recipe(self):
         self.create_user()
@@ -421,8 +421,7 @@ class TestYummyApi(TestCase):
                                           headers=headers,
                                           data=json.dumps(
                                               dict(category_name="Meat")))
-            reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'category deleted')
+            self.assertEqual(response.status_code, 204)
 
     # ----search tests
     def test_searching_categories(self):
@@ -474,7 +473,8 @@ class TestYummyApi(TestCase):
                                         data = json.dumps(
                                             dict(password='')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['Error'], 'password is empty')
+            self.assertEqual(reply['Error'], 'Please provide a password '+
+                             'key and value')
 
     def test_deleting_account_with_wrong_password(self):
         self.create_user()
@@ -497,9 +497,7 @@ class TestYummyApi(TestCase):
                                         headers = headers,
                                         data = json.dumps(
                                             dict(password='pass')))
-            reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'Your account was '+
-                             'successfully deleted')
+            self.assertEqual(response.status_code, 204)
 
 
 if __name__ == "__main__":
