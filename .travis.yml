@@ -15,7 +15,7 @@ before_script:
 env:
   DATABASE_URL = 'postgresql://localhost/test_yummy'
 script:
-  - nosetests --with-coverage --cover-package=apps
+  - nosetests --with-coverage --cover-package=app
 after_success:
   - coveralls
   - codeclimate
