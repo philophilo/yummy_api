@@ -1,12 +1,12 @@
 from app import app, login_manager
-from flask import request, abort, jsonify
+from flask import request, jsonify
 from app.models import Users, Category, Recipes, Blacklist
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy import and_
 from werkzeug.security import (generate_password_hash,
                                check_password_hash)
 from flask_login import (login_user, login_required,
-                         logout_user, current_user)
+                         logout_user)
 from datetime import datetime
 import re
 from werkzeug.exceptions import BadRequest
@@ -17,14 +17,16 @@ import traceback
 error = {}
 login_manager.login_view = '/'
 
+
 # login_manager's user loader from the users' object
 @login_manager.user_loader
 def load_user(user_username):
     return Users.query.filter_by(user_username=user_username).first()
 
+
 def check_empty_spaces(string):
     """ Check if a string still has any empty spaces"""
-	# split the string into chuncks
+    # split the string into chuncks
     split_string = string.split(" ")
     # get the length of chunks extructed
     number_of_splits = len(split_string)
@@ -33,11 +35,12 @@ def check_empty_spaces(string):
     # for each of the chuncks get the length
     for i in split_string:
         if len(i) == 0:
-            empty_chunks+=1
+            empty_chunks += 1
     # if the string is completely empty return False
     if empty_chunks == number_of_splits:
         return False
     return True
+
 
 def check_values(details):
     """check that the value is strictly a string"""
@@ -52,6 +55,7 @@ def check_values(details):
             error = {'Error': key+' is not a string'}
             return False
     return True
+
 
 def check_token():
     """check token validity"""
@@ -72,7 +76,7 @@ def check_token():
         error = 'Please provide a token'
         return False
     except ValueError as ex:
-        error = "you sent an "+ str(ex)
+        error = "you sent an " + str(ex)
         return False
     except Exception as ex:
         traceback.print_exc()
@@ -86,18 +90,20 @@ def check_string(value):
         return True
     return False
 
+
 def check_fullname(name):
     """ Check firstname and lastname seperated by space"""
     if re.match("([a-zA-Z]+) ([a-zA-Z]+)$", name):
         return True
     return False
 
+
 def check_upper_limit_fullname(name):
     """ checks maximum length of name """
-    print('.....',len(name))
     if len(name) <= 50:
         return True
     return False
+
 
 def check_lower_limit_fullname(name):
     """ checks minimum length of name """
@@ -112,17 +118,20 @@ def check_username(username):
         return True
     return False
 
+
 def check_username_upper_limit(username):
     """check the upper limit of the username"""
     if len(username) <= 20:
         return True
     return False
 
+
 def check_username_lower_limit(username):
     """check the lower limit of the username"""
     if len(username) >= 4:
         return True
     return False
+
 
 def check_password(password):
     """check that the password has numbers, symbols and minimum"""
@@ -141,11 +150,13 @@ def check_password(password):
             return True
     return False
 
+
 def check_password_upper_limit(password):
     """check the upper limit of password"""
     if len(password) <= 50:
         return True
     return False
+
 
 def check_password_lower_limit(password):
     """check the lower mimit of the password"""
@@ -153,11 +164,13 @@ def check_password_lower_limit(password):
         return True
     return False
 
+
 def check_item_name_alphabet(name):
     """check whether name is alphabetical"""
     if name.isalpha():
         return True
     return False
+
 
 def check_item_name_upper_limit(name):
     """check the upper limit of a name"""
@@ -165,11 +178,13 @@ def check_item_name_upper_limit(name):
         return True
     return False
 
+
 def check_item_name_lower_limit(name):
     """ check the lower limit of a name"""
     if len(name) >= 4:
         return True
     return False
+
 
 def validate_username(username):
     """ Validate username constraints """
@@ -178,16 +193,14 @@ def validate_username(username):
         if check_username_upper_limit(username):
             if check_username_lower_limit(username):
                 return True
-            else:
-                error = {'Error':'Username cannot '+
-                         'be less than 4'}
-        else:
-            error = {'Error':'Username must be '+
-                     'less than 20'}
-    else:
-        error = {'Error': 'username can have '+
-                 'alphabets, numbers'+
-                 ' and selected symbols(\'_ and -\')'}
+            error = {'Error': 'Username cannot ' +
+                     'be less than 4'}
+        error = {'Error': 'Username must be ' +
+                 'less than 20'}
+    error = {'Error': 'username can have ' +
+             'alphabets, numbers' +
+             ' and selected symbols(\'_ and -\')'}
+
 
 def validate_name(fullname):
     """Validate full name constraints"""
@@ -196,16 +209,14 @@ def validate_name(fullname):
         if check_upper_limit_fullname(fullname):
             if check_lower_limit_fullname(fullname):
                 return True
-            else:
-                error = {'Error': 'Firstname and Lastname cannot be '+
-                         'less than 4 characters'}
-        else:
-            error = {'Error': 'Firstname and lastname cannot be more '+
-                     'than 50 characters'}
-    else:
-        error = {'Error': 'Your firstname and lastname must '+
-                 'be seperated by a space'}
+            error = {'Error': 'Firstname and Lastname cannot be ' +
+                     'less than 4 characters'}
+        error = {'Error': 'Firstname and lastname cannot be more ' +
+                 'than 50 characters'}
+    error = {'Error': 'Your firstname and lastname must ' +
+             'be seperated by a space'}
     return False
+
 
 def validate_password(password):
     """Validate password constraints"""
@@ -219,7 +230,7 @@ def validate_password(password):
         else:
             error = {'Error': 'Password cannot be more than 50 characters'}
     else:
-        error = {'Error': 'Password must have atleast one Block letter, '+
+        error = {'Error': 'Password must have atleast one Block letter, ' +
                  'a number and a symbol'}
     return False
 
@@ -233,15 +244,16 @@ def validate_item_names(name):
                 if check_item_name_lower_limit(name):
                     return True
                 else:
-                    error = {'Error': 'The name cannot have less than '+
+                    error = {'Error': 'The name cannot have less than ' +
                              '4 characters'}
             else:
-                error = {'Error': 'The name cannot be more than 6'+
+                error = {'Error': 'The name cannot be more than 6' +
                          '6 characters'}
         else:
             error = {'Error': 'The name must be from alphabetical letters'}
     else:
         error = {'Error': 'The name must be a string'}
+
 
 def check_data_keys(data, expected_keys):
     """Check if expected are present in received data"""
@@ -251,6 +263,7 @@ def check_data_keys(data, expected_keys):
             error = {'Error': key+' key missing'}
             return False
     return True
+
 
 @app.route('/auth/register', methods=['POST'])
 def user_register():
@@ -301,8 +314,8 @@ def user_register():
                     validate_password(data['password']):
                 # parse data to Users model
                 user = Users(data['username'],
-                                generate_password_hash(data['password']),
-                                data['name'])
+                             generate_password_hash(data['password']),
+                             data['name'])
                 # add and commit to the database
                 user.add()
                 return jsonify({'username': user.user_username}), 201
@@ -319,7 +332,7 @@ def user_register():
     except ValueError as ex:
         return jsonify({'Error', str(ex)}), 400
     except BadRequest:
-        return jsonify({'Error': 'Please ensure that all '+
+        return jsonify({'Error': 'Please ensure that all ' +
                         'fields are specied'}), 400
     except Exception as ex:
         traceback.print_exc()
@@ -358,7 +371,6 @@ def login():
             token:
               type: string
               description: Authentication token
-              default: eyJ0eXAiOiJKV1QiLCJhbGciOiJIUzI1NiJ9.eyJleHAiOjE1MTczODIxMjEsImlhdCI6MTUxMzc4MjEyMSwic3ViIjoxfQ.i-IF_S78cYIkrJpCj0ykeq2Of52BWMaEpYeDNvJnlwc
     """
 
     try:
@@ -382,7 +394,7 @@ def login():
                     login_user(user)
                     return jsonify(
                         {'token': token.decode('ascii'),
-                        'message': 'login was successful'}
+                         'message': 'login was successful'}
                     ), 200
                 return jsonify({'Error': 'Incorrect password'}), 403
             return jsonify({'Error': 'User not found'}), 403
@@ -391,7 +403,6 @@ def login():
     except Exception as ex:
         traceback.print_exc()
         return jsonify({'Error': str(ex)}), 500
-
 
 
 @app.route('/auth/reset-password', methods=['PUT'])
@@ -442,8 +453,8 @@ def reset_password():
             data = request.json
             # check for expected data
             expected_data = check_data_keys(data,
-                                                ['password', 'new_password',
-                                                    'confirm_password'])
+                                            ['password', 'new_password',
+                                             'confirm_password'])
             # check whether values are strings and not empty
             check_response = check_values(data.values())
             if check_response and expected_data:
@@ -452,7 +463,7 @@ def reset_password():
                                 id=user_id).first()
                 # check if password matches the user's
                 if check_password_hash(user.user_password,
-                                    data['password']):
+                                       data['password']):
                     # delete current password from the dictionary
                     del data['password']
                     # TODO check empty values for passwords
@@ -464,20 +475,21 @@ def reset_password():
                         # update the pasword
                         user.update()
                         return jsonify({'message':
-                                        'Your password was '+
+                                        'Your password was ' +
                                         'successfully reset'}), 201
                     return jsonify({'message':
-                                    'Passwords do not '+
+                                    'Passwords do not ' +
                                     'match'})
-                return jsonify({'message':'Incorrect password'}), 403
+                return jsonify({'message': 'Incorrect password'}), 403
             return jsonify(error)
         except BadRequest:
             return jsonify({'Error': 'All fields must be parsed'}), 400
         except AttributeError as ex:
             return jsonify({'Error': 'All attributes are expected'}), 400
         except Exception as ex:
-            return jsonify({'Error':str(ex)}), 500
+            return jsonify({'Error': str(ex)}), 500
     return jsonify(error), 401
+
 
 @app.route('/auth/delete-account', methods=['DELETE'])
 @login_required
@@ -528,21 +540,22 @@ def delete_account():
                     id=user_id).first()
                 # check if the password provided matches the known
                 if check_password_hash(user.user_password,
-                                    data['password']):
+                                       data['password']):
                     user.delete()
                     return '', 204
                 return jsonify({'Error': 'Incorrect password'}), 403
             return jsonify(error), 400
         except TypeError:
-            return jsonify({'Error': 'Please provide a '+
+            return jsonify({'Error': 'Please provide a ' +
                             'password key and value'}), 400
         except BadRequest:
-            return jsonify({'Error': 'Please create a password key '+
+            return jsonify({'Error': 'Please create a password key ' +
                             'and value'}), 400
         except Exception as ex:
             traceback.print_exc()
             return jsonify({'Error': str(ex)}), 500
     return jsonify(error), 401
+
 
 @app.route('/auth/logout', methods=['POST'])
 @login_required
@@ -550,9 +563,8 @@ def logout():
     try:
         token = check_token()
         if token:
-            print(len(token))
-            blacklist = Blacklist(token = token,
-                                date = datetime.now())
+            blacklist = Blacklist(token=token,
+                                  date=datetime.now())
             blacklist.add()
             logout_user()
             return jsonify({'Error':
@@ -561,6 +573,7 @@ def logout():
             return jsonify(error), 401
     except Exception as ex:
         return jsonify(ex), 500
+
 
 @app.route('/category', methods=['POST'])
 def create_category():
@@ -628,18 +641,17 @@ def create_category():
                 return response, 201
             return jsonify(error), 400
         except TypeError:
-            return jsonify({'Error': 'Please provide a '+
+            return jsonify({'Error': 'Please provide a ' +
                             'password key and value'}), 400
         except BadRequest:
-            return jsonify({'Error': 'Please create a category name key '+
+            return jsonify({'Error': 'Please create a category name key ' +
                             'and value'}), 400
         except ValueError as ex:
-            return "you sent an "+ ex
+            return "you sent an " + ex
         except Exception as ex:
             return jsonify({'Error': str(ex)
                             }), 500
     return jsonify(error), 401
-
 
 
 @app.route('/category/', methods=['GET'])
@@ -794,8 +806,8 @@ def view_a_category(category_id):
                 # create response
                 response = jsonify(
                     {'id': user_category.cat_id,
-                    'category_name': user_category.cat_name,
-                    'message': 'category found'})
+                     'category_name': user_category.cat_name,
+                     'message': 'category found'})
                 # return response
                 return response, 200
             return jsonify({'count': '0',
@@ -858,7 +870,7 @@ def update_category(category_id):
             expected_data = check_data_keys(data, ['category_name'])
             # check that the data is a string and not empty
             check_response = check_values(data.values())
-            if check_response and check_response:
+            if check_response and expected_data:
                 # get category object
                 user_category = Category.query.filter_by(
                     cat_id=category_id, user_id=user_id).first()
@@ -882,12 +894,12 @@ def update_category(category_id):
         # capture value error
         except ValueError as ex:
             traceback.print_exc()
-            return jsonify({'Error': 'Invalid entry, please provide the '+
-                            'category id as integer and catgory name as '+
+            return jsonify({'Error': 'Invalid entry, please provide the ' +
+                            'category id as integer and catgory name as ' +
                             'string'}), 400
         # capture bad request
         except BadRequest:
-                return jsonify({'Error': 'Please parse both category id '+
+                return jsonify({'Error': 'Please parse both category id ' +
                                 'and category name'}), 400
         # get any other exception
         except Exception as ex:
@@ -950,10 +962,9 @@ def delete_category(category_id):
         # get any other exception
         except Exception as ex:
             return jsonify({'message': str(ex)}), 500
-    return jsonify( error), 401
+    return jsonify(error), 401
 
-# TODO change the name of the method to create_recipe
-# TODO change the route to /recipes/<int: category_id>
+
 @app.route('/category/recipes/<int:category_id>', methods=['POST'])
 @login_required
 def add_recipe(category_id):
@@ -980,7 +991,7 @@ def add_recipe(category_id):
                     description: A user defined recipe in a category
                 ingredients:
                     type: string
-                    description: A set of ingredients in a recipes seperated by ','
+                    description: Ingredients in a recipes seperated by ','
     security:
         - TokenHeader: []
     responses:
@@ -999,7 +1010,7 @@ def add_recipe(category_id):
               description: The id of the created recipe
             category_name:
               type: string
-              description: The name of the category underwhich the recipe was recipe
+              description: Name of the category underwhich the recipe was recipe
             recipe_name:
               type: string
               description: The name of the recipe created
@@ -1028,9 +1039,9 @@ def add_recipe(category_id):
                 if user_category is not None:
                     # create a recipe object
                     recipe = Recipes(name=data['recipe_name'],
-                                        category=category_id,
-                                        ingredients=data['ingredients'],
-                                        date=datetime.now())
+                                     category=category_id,
+                                     ingredients=data['ingredients'],
+                                     date=datetime.now())
                     # recipe under category id commited to database
                     recipe.add()
                     # return response
@@ -1046,12 +1057,12 @@ def add_recipe(category_id):
         # capture value error
         except ValueError as ex:
             traceback.print_exc()
-            return jsonify({'Error': 'Invalid entry, please provide the '+
-                            'category id as integer while recipe name '+
+            return jsonify({'Error': 'Invalid entry, please provide the ' +
+                            'category id as integer while recipe name ' +
                             'and ingredients as string'}), 400
         # capture bad request
         except BadRequest:
-                return jsonify({'Error': 'Please parse category id, '+
+                return jsonify({'Error': 'Please parse category id, ' +
                                 'recipe name and ingredients'}), 400
         # get any other exception
         except Exception as ex:
@@ -1139,7 +1150,7 @@ def update_recipe(category_id, recipe_id):
                                                 'ingredients'])
             # check that the data are strings and are not empty
             check_response = check_values([data['recipe_name'],
-                                            data['ingredients']])
+                                           data['ingredients']])
             if check_response and expected_data:
                 # get category object of category id
                 user_category = Category.query.filter_by(
@@ -1178,12 +1189,12 @@ def update_recipe(category_id, recipe_id):
         # capture value error
         except ValueError as ex:
             traceback.print_exc()
-            return jsonify({'Error': 'Invalid entry, please provide the '+
-                            'category id as integer while recipe name '+
+            return jsonify({'Error': 'Invalid entry, please provide the ' +
+                            'category id as integer while recipe name ' +
                             'and ingredients as string'}), 400
         # capture bad request
         except BadRequest:
-                return jsonify({'Error': 'Please parse category id, '+
+                return jsonify({'Error': 'Please parse category id, ' +
                                 'recipe name and ingredients'}), 400
         # get any other exception
         except Exception as ex:
@@ -1253,11 +1264,11 @@ def delete_recipe(category_id, recipe_id):
         # capture value error
         except ValueError as ex:
             traceback.print_exc()
-            return jsonify({'Error': 'Invalid entry, please provide the '+
+            return jsonify({'Error': 'Invalid entry, please provide the ' +
                             'category id and recipe id as integers'}), 400
         # capture bad request
         except BadRequest:
-                return jsonify({'Error': 'Please parse the recipe id '+
+                return jsonify({'Error': 'Please parse the recipe id ' +
                                 'and category id'}), 400
         # get any other exception
         except Exception as ex:
@@ -1371,8 +1382,8 @@ def view_category_recipes(category_id):
         # capture value error
         except ValueError as ex:
             traceback.print_exc()
-            return jsonify({'Error': 'Invalid entry, please provide the '+
-                            'category id as integer while recipe name '+
+            return jsonify({'Error': 'Invalid entry, please provide the ' +
+                            'category id as integer while recipe name ' +
                             'and ingredients as string'}), 400
         # capture bad request
         except BadRequest:
@@ -1435,7 +1446,7 @@ def view_one_recipe(category_id, recipe_id):
                 # get recipe object
                 user_recipes = Recipes.query.filter_by(
                     rec_cat=category_id, rec_id=recipe_id)
-                #user_recipes = Recipes.query.filter_by(rec_id=recipe_id)
+                # user_recipes = Recipes.query.filter_by(rec_id=recipe_id)
                 # if the recipes is not None
                 if user_recipes is not None:
                     # list in which dictionaries of recipes will be stored
@@ -1455,11 +1466,11 @@ def view_one_recipe(category_id, recipe_id):
         # capture value error
         except ValueError as ex:
             traceback.print_exc()
-            return jsonify({'Error': 'Invalid entry, please provide the '+
+            return jsonify({'Error': 'Invalid entry, please provide the ' +
                             'category id and recipe id as integers'}), 400
         # capture bad request
         except BadRequest:
-                return jsonify({'Error': 'Please parse the recipe id and '+
+                return jsonify({'Error': 'Please parse the recipe id and ' +
                                 'category id'}), 400
         # get any other exception
         except Exception as ex:
@@ -1563,7 +1574,7 @@ def search_categories():
         # capture value error
         except ValueError as ex:
             traceback.print_exc()
-            return jsonify({'Error': 'Invalid entry, please provide '+
+            return jsonify({'Error': 'Invalid entry, please provide ' +
                             'q as a string'}), 400
         # capture bad request
         except BadRequest:
@@ -1647,15 +1658,15 @@ def search_recipes():
             # check if q is a string and not empty
             check_response = check_values([q])
             if check_response:
+                # query for recipes that a closely related searched string
                 found_recipes = Category.query.join(
-                    Recipes, Category.cat_id==Recipes.rec_cat).add_columns(
+                    Recipes, Category.cat_id == Recipes.rec_cat).add_columns(
                         Category.cat_id, Category.user_id,
                         Category.cat_name, Recipes.rec_id, Recipes.rec_name,
                         Recipes.rec_ingredients).filter(
                             Category.user_id == user_id).filter(
                                 Recipes.rec_name.ilike('%'+q+'%')).paginate(
                                     page, per_page, False)
-                print(found_recipes.items,'=====')
                 current_page = found_recipes.page
                 number_of_pages = found_recipes.pages
                 next_page = found_recipes.next_num
@@ -1664,11 +1675,11 @@ def search_recipes():
                 results = []
                 for recipe in found_recipes.items:
                     result = {
-                        'category_id':recipe.cat_id,
+                        'category_id': recipe.cat_id,
                         'category_name': recipe.cat_name,
-                        'recipe_id':recipe.rec_id,
-                        'recipe_name':recipe.rec_name,
-                        'recipes_ingredients':recipe.rec_ingredients
+                        'recipe_id': recipe.rec_id,
+                        'recipe_name': recipe.rec_name,
+                        'recipes_ingredients': recipe.rec_ingredients
                     }
                     results.append(result)
                 return jsonify({'categories': results,
@@ -1682,7 +1693,7 @@ def search_recipes():
         # capture value error
         except ValueError as ex:
             traceback.print_exc()
-            return jsonify({'Error': 'Invalid entry, please provide '+
+            return jsonify({'Error': 'Invalid entry, please provide ' +
                             'q as a string'}), 400
         # capture bad request
         except BadRequest:

@@ -11,12 +11,12 @@ swagger = Swagger(app,
                   template={
                     "info": {
                         "title": "Yummy Recipes API",
-                        "description": "Ymmy recipes helps many individuals "+
-                            "who love to cook and aet food keep track of "+
-                            "those awesome food recipes. Yummy recipes allows "+
-                            "them to remember recipes and share with others."
+                        "description": "Ymmy recipes helps many individuals " +
+                        "who love to cook and aet food keep track of " +
+                        "those awesome food recipes. Yummy recipes allows" +
+                        " them to remember recipes and share with others."
                     },
-                    "securityDefinitions":{
+                    "securityDefinitions": {
                         "TokenHeader": {
                             "type": "apiKey",
                             "name": "Authorization",
@@ -35,11 +35,12 @@ login_manager.init_app(app)
 
 from app.views import *
 
+
 @app.errorhandler(404)
 def page_not_found(e):
-    return jsonify({'Error':'Page not found'}), 404
+    return jsonify({'Error': 'Page not found'}), 404
+
 
 @app.errorhandler(405)
 def method_not_allowed(e):
-    return jsonify({'Error':'Method not allowed'}), 405
-
+    return jsonify({'Error': 'Method not allowed'}), 405

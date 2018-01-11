@@ -1,11 +1,10 @@
 from app import db, app
 from datetime import datetime, timedelta
-from sqlalchemy.exc import IntegrityError
-# import traceback
 import jwt
 
-# TODO determine nullables in the models
+
 class Users(db.Model):
+
     __tablename__ = 'users'
     id = db.Column(db.Integer, primary_key=True)
     user_name = db.Column(db.String(100))
@@ -48,12 +47,13 @@ class Users(db.Model):
             return jwt_string
         except Exception as ex:
             raise Exception(ex)
+
     @staticmethod
     def check_not_blacklisted(token):
         """Check that the token is not in the blacklist table"""
         blacklist = Blacklist.query.filter_by(token=token).first()
         if blacklist is not None:
-            if blacklist.token ==  token:
+            if blacklist.token == token:
                 return False
         return True
 
@@ -69,7 +69,6 @@ class Users(db.Model):
             raise jwt.ExpiredSignatureError("The token is expired")
         except jwt.InvalidTokenError:
             return jwt.InvalidTokenError("Invalid token")
-
 
     def __repr__(self):
         return '<Users %s>' % self.user_username
@@ -159,7 +158,6 @@ class Blacklist(db.Model):
     def __init__(self, token, date):
         self.token = token
         self.date = date
-
 
     def add(self):
         db.session.add(self)
