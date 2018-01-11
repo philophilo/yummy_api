@@ -15,6 +15,7 @@ import traceback
 # import pdb
 
 error = {}
+valid_data = {}
 login_manager.login_view = '/'
 
 
@@ -27,7 +28,9 @@ def load_user(user_username):
 def check_empty_spaces(string):
     """ Check if a string still has any empty spaces"""
     # split the string into chuncks
+    string = string.strip()
     split_string = string.split(" ")
+    print('............', split_string)
     # get the length of chunks extructed
     number_of_splits = len(split_string)
     # keep track of the empty chunks
@@ -39,18 +42,21 @@ def check_empty_spaces(string):
     # if the string is completely empty return False
     if empty_chunks == number_of_splits:
         return False
-    return True
+    return string
 
 
 def check_values(details):
     """check that the value is strictly a string"""
     global error
-    for key, value in enumerate(details):
+    global valid_data
+    for key, value in details.items():
         if(isinstance(value, str)):
             # strip strings of white spaces
-            if not value.strip() and not check_empty_spaces(value):
+            cleaned_value = check_empty_spaces(value)
+            if not cleaned_value:
                 error = {'Error': key+' is empty'}
                 return False
+            valid_data[key] = cleaned_value
         else:
             error = {'Error': key+' is not a string'}
             return False
@@ -73,10 +79,10 @@ def check_token():
         error = ex
         return False
     except AttributeError:
-        error = 'Please provide a token'
+        error = {'Error': 'Please provide a token'}
         return False
     except ValueError as ex:
-        error = "you sent an " + str(ex)
+        error = {'Error': "you sent an " + str(ex)}
         return False
     except Exception as ex:
         traceback.print_exc()
@@ -301,21 +307,43 @@ def user_register():
               type: string
               description: The username
               default: some_username
+      400:
+        description: A bad request mainly as a result of invalid data
+        content: application/json
+        schema:
+          id: registration_output_400
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+      409:
+        description: Conflict, a similar record already exists
+        content: application/json
+        schema:
+          id: registration_output_409
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: The username already exists
 
     """
     try:
         data = request.json
+        # TODO add email as a requirements
         # check if values are strings and not empty
-        check_response = check_values(data.values())
+        check_response = check_values(data)
         if check_response:
+            print(valid_data, '=========')
             # validate the username, name and password
-            if validate_username(data['username']) and \
-                    validate_name(data['name']) and \
-                    validate_password(data['password']):
+            if validate_username(valid_data['username']) and \
+                    validate_name(valid_data['name']) and \
+                    validate_password(valid_data['password']):
                 # parse data to Users model
-                user = Users(data['username'],
-                             generate_password_hash(data['password']),
-                             data['name'])
+                user = Users(valid_data['username'],
+                             generate_password_hash(valid_data['password']),
+                             valid_data['name'])
                 # add and commit to the database
                 user.add()
                 return jsonify({'username': user.user_username}), 201
@@ -330,13 +358,14 @@ def user_register():
         return jsonify({'Error':
                         'The username already exits'}), 409
     except ValueError as ex:
-        return jsonify({'Error', str(ex)}), 400
+        traceback.print_exc()
+        return jsonify({'Error': str(ex)}), 400
     except BadRequest:
         return jsonify({'Error': 'Please ensure that all ' +
-                        'fields are specied'}), 400
+                        'fields are correctly specified'}), 400
     except Exception as ex:
         traceback.print_exc()
-        return jsonify({'Error': str(ex)}), 500
+        return jsonify({'Error': str(ex)}), 400
 
 
 @app.route("/auth/login", methods=['POST'])
@@ -366,11 +395,31 @@ def login():
         description: Login successful
         content: application/json
         schema:
-          id: login_output
+          id: login_output_200
           properties:
             token:
               type: string
               description: Authentication token
+      400:
+        description: A bad request mainly as a result of invalid data
+        content: application/json
+        schema:
+          id: login_output_400
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+      403:
+        description: Invalid request mainly requiering permissions
+        content: application/json
+        schema:
+          id: login_output_403
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
     """
 
     try:
@@ -378,16 +427,16 @@ def login():
         # check that expected data is present
         expected_data = check_data_keys(data, ['username', 'password'])
         # check that credentials are strings and not empty
-        check_response = check_values(data.values())
+        check_response = check_values(data)
         if check_response and expected_data:
             # check if user exists
             user = Users.query.filter_by(
-                user_username=data['username']).first()
+                user_username=valid_data['username']).first()
             if user is not None:
                 # check password
                 if check_password_hash(
                         user.user_password,
-                        data['password']):
+                        valid_data['password']):
                     # generate token
                     token = user.generate_auth_token()
                     # login in user with floask_login
@@ -400,13 +449,16 @@ def login():
             return jsonify({'Error': 'User not found'}), 403
         else:
             return jsonify(error), 400
+    except BadRequest:
+        return jsonify({'Error': 'Please ensure that all ' +
+                        'fields are correctly specified'}), 400
     except Exception as ex:
         traceback.print_exc()
-        return jsonify({'Error': str(ex)}), 500
+        return jsonify({'Error': str(ex)}), 400
 
 
 @app.route('/auth/reset-password', methods=['PUT'])
-# @login_required
+@login_required
 def reset_password():
     """
     Reset password
@@ -432,7 +484,7 @@ def reset_password():
                     type: string
                     description: user's matching new authentication password
     responses:
-      200:
+      201:
         description: Login successful
         content: application/json
         schema:
@@ -442,6 +494,36 @@ def reset_password():
               type: string
               description: Success message
               default: Your password was successfully reset
+      400:
+        description: A bad request mainly as a result of invalid data
+        content: application/json
+        schema:
+          id: reset_password_output_400
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+      401:
+        description: Un authorized, the resource requires authorization
+        content: application/json
+        schema:
+          id: reset_password_output_401
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+      403:
+        description: Invalid request mainly requiering permissions
+        content: application/json
+        schema:
+          id: reset_password_output_403
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: Incorrect password
     """
 
     token = check_token()
@@ -456,22 +538,22 @@ def reset_password():
                                             ['password', 'new_password',
                                              'confirm_password'])
             # check whether values are strings and not empty
-            check_response = check_values(data.values())
+            check_response = check_values(data)
             if check_response and expected_data:
                 # get the user object based on authenticated user id
                 user = Users.query.filter_by(
                                 id=user_id).first()
                 # check if password matches the user's
                 if check_password_hash(user.user_password,
-                                       data['password']):
+                                       valid_data['password']):
                     # delete current password from the dictionary
-                    del data['password']
+                    del valid_data['password']
                     # TODO check empty values for passwords
-                    if data['new_password'] \
-                            == data['confirm_password']:
+                    if valid_data['new_password'] \
+                            == valid_data['confirm_password']:
                         # set password to new value
                         user.user_password = generate_password_hash(
-                            data['new_password'])
+                            valid_data['new_password'])
                         # update the pasword
                         user.update()
                         return jsonify({'message':
@@ -487,7 +569,7 @@ def reset_password():
         except AttributeError as ex:
             return jsonify({'Error': 'All attributes are expected'}), 400
         except Exception as ex:
-            return jsonify({'Error': str(ex)}), 500
+            return jsonify({'Error': str(ex)}), 400
     return jsonify(error), 401
 
 
@@ -514,16 +596,39 @@ def delete_account():
     security:
         - TokenHeader: []
     responses:
-      200:
-        description: Login successful
+      204:
+        description: Deleted account
+        content: application/json
+      400:
+        description: A bad request mainly as a result of invalid data
         content: application/json
         schema:
-          id: delete_account_output
+          id: delete_account_output_400
           properties:
-            message:
+            Error:
               type: string
-              description: Success message
-              default: Your account was successfully deleted
+              description: Error
+              default: some_error
+      401:
+        description: Un authorized, the resource requires authorization
+        content: application/json
+        schema:
+          id: delete_account_output_401
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+      403:
+        description: Invalid request mainly requiering permissions
+        content: application/json
+        schema:
+          id: delete_account_output_403
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: Incorrect password
     """
 
     token = check_token()
@@ -534,13 +639,13 @@ def delete_account():
             # check that data was sent
             expected_data = check_data_keys(data, ['password'])
             # check if password value is string and not empty
-            check_response = check_values([data['password']])
+            check_response = check_values(data)
             if check_response and expected_data:
                 user = Users.query.filter_by(
                     id=user_id).first()
                 # check if the password provided matches the known
                 if check_password_hash(user.user_password,
-                                       data['password']):
+                                       valid_data['password']):
                     user.delete()
                     return '', 204
                 return jsonify({'Error': 'Incorrect password'}), 403
@@ -553,13 +658,44 @@ def delete_account():
                             'and value'}), 400
         except Exception as ex:
             traceback.print_exc()
-            return jsonify({'Error': str(ex)}), 500
+            return jsonify({'Error': str(ex)}), 400
     return jsonify(error), 401
 
 
 @app.route('/auth/logout', methods=['POST'])
 @login_required
 def logout():
+    """
+    Logout
+    This resource a registered user's account
+    ---
+    tags:
+      - Authentication
+    security:
+        - TokenHeader: []
+    responses:
+      200:
+        description: Login successful
+        content: application/json
+        schema:
+          id: logout_output_200
+          properties:
+            token:
+              type: string
+              description: Authentication token
+              default: logout was successful
+      401:
+        description: Un authorized, the resource requires authorization
+        content: application/json
+        schema:
+          id: logout_output_401
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+    """
+
     try:
         token = check_token()
         if token:
@@ -572,7 +708,7 @@ def logout():
         else:
             return jsonify(error), 401
     except Exception as ex:
-        return jsonify(ex), 500
+        return jsonify(ex), 400
 
 
 @app.route('/category', methods=['POST'])
@@ -613,6 +749,46 @@ def create_category():
             category_name:
               type: string
               description: The name of the created category
+      400:
+        description: A bad request mainly as a result of invalid data
+        content: application/json
+        schema:
+          id: create_category_output_400
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+      401:
+        description: Unauthorized, the resource requires authorization
+        content: application/json
+        schema:
+          id: create_category_output_401
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+      403:
+        description: Invalid request mainly requiering permissions
+        content: application/json
+        schema:
+          id: create_category_output_403
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+      409:
+        description: Conflict, a similar record already exists
+        content: application/json
+        schema:
+          id: create_category_output_409
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: Category name already exists
     """
 
     # pdb.set_trace()
@@ -625,20 +801,27 @@ def create_category():
             # check for expected data
             expected_data = check_data_keys(data, ['category_name'])
             # check that the expected data are strings and not empty
-            check_response = check_values(data.values())
+            check_response = check_values(data)
             if check_response and expected_data:
-                # create a the category object
-                category = Category(user_id=int(user_id),
-                                    cat_name=data['category_name']
-                                    )
-                # add the object to the database
-                category.add()
-                # create response
-                response = jsonify({'id': category.cat_id,
-                                    'category_name': category.cat_name,
-                                    'message': 'category created'})
-                # return response
-                return response, 201
+                # check if category name already exists
+                check_category = Category.query.filter_by(
+                    user_id=int(user_id),
+                    cat_name=valid_data['category_name']
+                ).first()
+                if check_category is None:
+                    # create a the category object
+                    category = Category(user_id=int(user_id),
+                                        cat_name=valid_data['category_name']
+                                        )
+                    # add the object to the database
+                    category.add()
+                    # create response
+                    response = jsonify({'id': category.cat_id,
+                                        'category_name': category.cat_name,
+                                        'message': 'category created'})
+                    # return response
+                    return response, 201
+                return jsonify({'Error': 'Category name already exists'}), 409
             return jsonify(error), 400
         except TypeError:
             return jsonify({'Error': 'Please provide a ' +
@@ -647,10 +830,10 @@ def create_category():
             return jsonify({'Error': 'Please create a category name key ' +
                             'and value'}), 400
         except ValueError as ex:
-            return "you sent an " + ex
+            return jsonify({'Error': "you sent an " + str(ex)}), 400
         except Exception as ex:
             return jsonify({'Error': str(ex)
-                            }), 500
+                            }), 400
     return jsonify(error), 401
 
 
@@ -710,6 +893,26 @@ def view_all_categories():
             previous_page:
               type: integer
               description: The previous page retrived if it existed
+      400:
+        description: A bad request mainly as a result of invalid data
+        content: application/json
+        schema:
+          id: view_categories_output_400
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
+      403:
+        description: Invalid request mainly requiering permissions
+        content: application/json
+        schema:
+          id: view_categories_output_403
+          properties:
+            Error:
+              type: string
+              description: Error
+              default: some_error
     """
     token = check_token()
     print('****', token)
@@ -724,6 +927,7 @@ def view_all_categories():
             user_categories = Category.query.filter_by(
                 user_id=user_id).paginate(page, per_page, False)
             # check if the object is not None
+            print('-----', user_categories.items, user_id)
             if user_categories is not None:
                 # list to store dictionaries of categories
                 results = []
@@ -755,7 +959,7 @@ def view_all_categories():
                             'message': 'no categories found'
                             }), 404
         except Exception as ex:
-            return jsonify({'Error': str(ex)}), 500
+            return jsonify({'Error': str(ex)}), 400
 
     return jsonify(error), 401
 
@@ -869,7 +1073,7 @@ def update_category(category_id):
             # check for expected data
             expected_data = check_data_keys(data, ['category_name'])
             # check that the data is a string and not empty
-            check_response = check_values(data.values())
+            check_response = check_values(data)
             if check_response and expected_data:
                 # get category object
                 user_category = Category.query.filter_by(
@@ -877,7 +1081,7 @@ def update_category(category_id):
                 # check that the category object is not empty
                 if user_category is not None:
                     # update the the category name in the object
-                    user_category.cat_name = data["category_name"]
+                    user_category.cat_name = valid_data["category_name"]
                     # commit the update to the database
                     user_category.update()
                     # create response
@@ -1030,7 +1234,7 @@ def add_recipe(category_id):
             expected_data = check_data_keys(data,
                                             ['recipe_name', 'ingredients'])
             # check that the expected data is string and not empty
-            check_responses = check_values(data.values())
+            check_responses = check_values(data)
             if check_responses and expected_data:
                 # get object of categiry with parsed category id
                 user_category = Category.query.filter_by(
@@ -1038,9 +1242,9 @@ def add_recipe(category_id):
                 # check that the category id not None
                 if user_category is not None:
                     # create a recipe object
-                    recipe = Recipes(name=data['recipe_name'],
+                    recipe = Recipes(name=valid_data['recipe_name'],
                                      category=category_id,
-                                     ingredients=data['ingredients'],
+                                     ingredients=valid_data['ingredients'],
                                      date=datetime.now())
                     # recipe under category id commited to database
                     recipe.add()
@@ -1149,8 +1353,8 @@ def update_recipe(category_id, recipe_id):
                                                 'recipe_category_id',
                                                 'ingredients'])
             # check that the data are strings and are not empty
-            check_response = check_values([data['recipe_name'],
-                                           data['ingredients']])
+            check_response = check_values({'recipe_name': data['recipe_name'],
+                                           'ingredients': data['ingredients']})
             if check_response and expected_data:
                 # get category object of category id
                 user_category = Category.query.filter_by(
@@ -1163,13 +1367,12 @@ def update_recipe(category_id, recipe_id):
                     if user_recipe is not None:
                         # TODO include rec_category_id in tests
                         # ---update the recipes object
-                        user_recipe.rec_name = data[
+                        user_recipe.rec_name = valid_data[
                             'recipe_name']
                         user_recipe.rec_cat = category_id
-                        user_recipe.rec_ingredients = data[
+                        user_recipe.rec_ingredients = valid_data[
                             'ingredients']
-                        user_recipe.rec_cat = data[
-                            'recipe_category_id']
+                        user_recipe.rec_cat = data['recipe_category_id']
                         # -------
                         # commit the updates
                         user_recipe.update()
@@ -1541,7 +1744,7 @@ def search_categories():
             per_page = int(request.args.get('per_page', 5))
             user_id = Users.decode_token(token)
             # check if q is a string and not empty
-            check_response = check_values([q])
+            check_response = check_values({'q':q})
             if check_response:
                 # get category object
                 user_categories = Category.query.filter(and_(
@@ -1656,7 +1859,7 @@ def search_recipes():
             per_page = int(request.args.get('per_page', 5))
             user_id = Users.decode_token(token)
             # check if q is a string and not empty
-            check_response = check_values([q])
+            check_response = check_values({'q':q})
             if check_response:
                 # query for recipes that a closely related searched string
                 found_recipes = Category.query.join(

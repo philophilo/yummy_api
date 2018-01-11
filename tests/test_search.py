@@ -26,4 +26,5 @@ class TestSearch(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())
+            print('----', reply)
             self.assertEqual(reply['message'], 'Recipes found')

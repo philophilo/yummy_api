@@ -86,6 +86,7 @@ class TestRecipes(BaseTestCase):
                                                 recipe_category_id=1,
                                                 ingredients="beef, onions")))
             reply = json.loads(response.data.decode())
+            print('----', reply)
             self.assertEqual(reply['message'], 'Recipe updated')
 
     def test_deleting_known_recipe(self):
