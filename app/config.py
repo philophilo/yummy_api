@@ -21,11 +21,19 @@ class StagingConfig(Config):
 
 
 class DevelopingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "postgresql://philophilo:philophilo@localhost/yummy")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL",
+                                             "postgresql://philophilo:philophilo@localhost/yummy")
     DEVELOPING = True
     DEBUG = True
 
 
 class TestingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL", "postgresql://philophilo:philophilo@localhost/test_yummy")
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL",
+                                             "postgresql://localhost/test_yummy")
+    TESTING = True
+
+
+class LocalTestingConfig(Config):
+    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL",
+                                             "postgresql://philophilo:philophilo@localhost/test_yummy")
     TESTING = True
