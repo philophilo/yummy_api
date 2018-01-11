@@ -34,6 +34,5 @@ class TestingConfig(Config):
 
 
 class LocalTestingConfig(Config):
-    SQLALCHEMY_DATABASE_URI = os.environ.get("DATABASE_URL",
-                                             "postgresql://philophilo:philophilo@localhost/test_yummy")
+    SQLALCHEMY_DATABASE_URI = "postgresql://philophilo:philophilo@localhost/test_yummy"
     TESTING = True
