@@ -1,5 +1,4 @@
 .coveragerc
-.coverage
 .ropeproject
 .git/
 .DS_Store
