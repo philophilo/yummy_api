@@ -8,14 +8,13 @@ from werkzeug.security import (generate_password_hash,
 from flask_login import (login_user, login_required,
                          logout_user)
 from datetime import datetime
-import re
 from werkzeug.exceptions import BadRequest
-from jwt import ExpiredSignatureError, InvalidTokenError
-import traceback
-# import pdb
+from app.serializer import (check_data_keys, check_values,
+                            valid_data, validate_username, validate_name,
+                            validate_password, error,
+                            check_token)
 
-error = {}
-valid_data = {}
+
 login_manager.login_view = '/'
 
 
@@ -23,252 +22,6 @@ login_manager.login_view = '/'
 @login_manager.user_loader
 def load_user(user_username):
     return Users.query.filter_by(user_username=user_username).first()
-
-
-def check_empty_spaces(string):
-    """ Check if a string still has any empty spaces"""
-    # split the string into chuncks
-    string = string.strip()
-    split_string = string.split(" ")
-    print('............', split_string)
-    # get the length of chunks extructed
-    number_of_splits = len(split_string)
-    # keep track of the empty chunks
-    empty_chunks = 0
-    # for each of the chuncks get the length
-    for i in split_string:
-        if len(i) == 0:
-            empty_chunks += 1
-    # if the string is completely empty return False
-    if empty_chunks == number_of_splits:
-        return False
-    return string
-
-
-def check_values(details):
-    """check that the value is strictly a string"""
-    global error
-    global valid_data
-    for key, value in details.items():
-        if(isinstance(value, str)):
-            # strip strings of white spaces
-            cleaned_value = check_empty_spaces(value)
-            if not cleaned_value:
-                error = {'Error': key+' is empty'}
-                return False
-            valid_data[key] = cleaned_value
-        else:
-            error = {'Error': key+' is not a string'}
-            return False
-    return True
-
-
-def check_token():
-    """check token validity"""
-    global error
-    token = None
-    try:
-        auth_header = request.headers.get('Authorization')
-        token = auth_header.split(" ")[1]
-        if Users.decode_token(token):
-            return token
-    except InvalidTokenError as ex:
-        error = ex
-        return False
-    except ExpiredSignatureError as ex:
-        error = ex
-        return False
-    except AttributeError:
-        error = {'Error': 'Please provide a token'}
-        return False
-    except ValueError as ex:
-        error = {'Error': "you sent an " + str(ex)}
-        return False
-    except Exception as ex:
-        traceback.print_exc()
-        error = str(ex)
-        return False
-
-
-def check_string(value):
-    """check that the value is strictly a string"""
-    if isinstance(value, str):
-        return True
-    return False
-
-
-def check_fullname(name):
-    """ Check firstname and lastname seperated by space"""
-    if re.match("([a-zA-Z]+) ([a-zA-Z]+)$", name):
-        return True
-    return False
-
-
-def check_upper_limit_fullname(name):
-    """ checks maximum length of name """
-    if len(name) <= 50:
-        return True
-    return False
-
-
-def check_lower_limit_fullname(name):
-    """ checks minimum length of name """
-    if len(name) >= 4:
-        return True
-    return False
-
-
-def check_username(username):
-    """check valid username"""
-    if re.match("^[a-zA-Z0-9_-]+$", username):
-        return True
-    return False
-
-
-def check_username_upper_limit(username):
-    """check the upper limit of the username"""
-    if len(username) <= 20:
-        return True
-    return False
-
-
-def check_username_lower_limit(username):
-    """check the lower limit of the username"""
-    if len(username) >= 4:
-        return True
-    return False
-
-
-def check_password(password):
-    """check that the password has numbers, symbols and minimum"""
-    state = True
-    while state:
-        if not re.search("[a-z]", password):
-            break
-        elif not re.search("[0-9]", password):
-            break
-        elif not re.search("[A-Z]", password):
-            break
-        elif not re.search("[!\(\)\[\]@#$%^&*+]", password):
-            break
-        else:
-            state = False
-            return True
-    return False
-
-
-def check_password_upper_limit(password):
-    """check the upper limit of password"""
-    if len(password) <= 50:
-        return True
-    return False
-
-
-def check_password_lower_limit(password):
-    """check the lower mimit of the password"""
-    if len(password) >= 6:
-        return True
-    return False
-
-
-def check_item_name_alphabet(name):
-    """check whether name is alphabetical"""
-    if name.isalpha():
-        return True
-    return False
-
-
-def check_item_name_upper_limit(name):
-    """check the upper limit of a name"""
-    if len(name) <= 20:
-        return True
-    return False
-
-
-def check_item_name_lower_limit(name):
-    """ check the lower limit of a name"""
-    if len(name) >= 4:
-        return True
-    return False
-
-
-def validate_username(username):
-    """ Validate username constraints """
-    global error
-    if check_username(username):
-        if check_username_upper_limit(username):
-            if check_username_lower_limit(username):
-                return True
-            error = {'Error': 'Username cannot ' +
-                     'be less than 4'}
-        error = {'Error': 'Username must be ' +
-                 'less than 20'}
-    error = {'Error': 'username can have ' +
-             'alphabets, numbers' +
-             ' and selected symbols(\'_ and -\')'}
-
-
-def validate_name(fullname):
-    """Validate full name constraints"""
-    global error
-    if check_fullname(fullname):
-        if check_upper_limit_fullname(fullname):
-            if check_lower_limit_fullname(fullname):
-                return True
-            error = {'Error': 'Firstname and Lastname cannot be ' +
-                     'less than 4 characters'}
-        error = {'Error': 'Firstname and lastname cannot be more ' +
-                 'than 50 characters'}
-    error = {'Error': 'Your firstname and lastname must ' +
-             'be seperated by a space'}
-    return False
-
-
-def validate_password(password):
-    """Validate password constraints"""
-    global error
-    if check_password(password):
-        if check_password_upper_limit(password):
-            if check_password_lower_limit(password):
-                return True
-            else:
-                error = {'Error': 'Password cannot be less than 6 characters'}
-        else:
-            error = {'Error': 'Password cannot be more than 50 characters'}
-    else:
-        error = {'Error': 'Password must have atleast one Block letter, ' +
-                 'a number and a symbol'}
-    return False
-
-
-def validate_item_names(name):
-    """Validate item names"""
-    global error
-    if check_string(name):
-        if check_item_name_alphabet(name):
-            if check_item_name_upper_limit(name):
-                if check_item_name_lower_limit(name):
-                    return True
-                else:
-                    error = {'Error': 'The name cannot have less than ' +
-                             '4 characters'}
-            else:
-                error = {'Error': 'The name cannot be more than 6' +
-                         '6 characters'}
-        else:
-            error = {'Error': 'The name must be from alphabetical letters'}
-    else:
-        error = {'Error': 'The name must be a string'}
-
-
-def check_data_keys(data, expected_keys):
-    """Check if expected are present in received data"""
-    global error
-    for key in expected_keys:
-        if key not in data:
-            error = {'Error': key+' key missing'}
-            return False
-    return True
 
 
 @app.route('/auth/register', methods=['POST'])
@@ -332,10 +85,11 @@ def user_register():
     try:
         data = request.json
         # TODO add email as a requirements
+        # check for expected data
+        expected_data = check_data_keys(data, ['username', 'name', 'password'])
         # check if values are strings and not empty
         check_response = check_values(data)
-        if check_response:
-            print(valid_data, '=========')
+        if expected_data and check_response:
             # validate the username, name and password
             if validate_username(valid_data['username']) and \
                     validate_name(valid_data['name']) and \
@@ -358,13 +112,11 @@ def user_register():
         return jsonify({'Error':
                         'The username already exits'}), 409
     except ValueError as ex:
-        traceback.print_exc()
         return jsonify({'Error': str(ex)}), 400
     except BadRequest:
         return jsonify({'Error': 'Please ensure that all ' +
                         'fields are correctly specified'}), 400
     except Exception as ex:
-        traceback.print_exc()
         return jsonify({'Error': str(ex)}), 400
 
 
@@ -453,7 +205,6 @@ def login():
         return jsonify({'Error': 'Please ensure that all ' +
                         'fields are correctly specified'}), 400
     except Exception as ex:
-        traceback.print_exc()
         return jsonify({'Error': str(ex)}), 400
 
 
@@ -657,7 +408,6 @@ def delete_account():
             return jsonify({'Error': 'Please create a password key ' +
                             'and value'}), 400
         except Exception as ex:
-            traceback.print_exc()
             return jsonify({'Error': str(ex)}), 400
     return jsonify(error), 401
 
@@ -915,7 +665,6 @@ def view_all_categories():
               default: some_error
     """
     token = check_token()
-    print('****', token)
     if token:
         try:
             user_id = Users.decode_token(token)
@@ -927,7 +676,6 @@ def view_all_categories():
             user_categories = Category.query.filter_by(
                 user_id=user_id).paginate(page, per_page, False)
             # check if the object is not None
-            print('-----', user_categories.items, user_id)
             if user_categories is not None:
                 # list to store dictionaries of categories
                 results = []
@@ -1018,14 +766,12 @@ def view_a_category(category_id):
                             'message': 'category not found'}), 404
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry for category id'})
         # capture bad request
         except BadRequest:
                 return jsonify({'Error': 'Please parse a category id'})
         # get any other exception
         except Exception as ex:
-            traceback.print_exc()
             return jsonify({'Error': str(ex)}), 500
     return jsonify(error), 401
 
@@ -1097,7 +843,6 @@ def update_category(category_id):
                 return jsonify(error), 400
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry, please provide the ' +
                             'category id as integer and catgory name as ' +
                             'string'}), 400
@@ -1158,7 +903,6 @@ def delete_category(category_id):
             return jsonify({'message': 'category not found'})
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry for category id'}), 400
         # capture bad request
         except BadRequest:
@@ -1260,7 +1004,6 @@ def add_recipe(category_id):
 
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry, please provide the ' +
                             'category id as integer while recipe name ' +
                             'and ingredients as string'}), 400
@@ -1391,7 +1134,6 @@ def update_recipe(category_id, recipe_id):
 
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry, please provide the ' +
                             'category id as integer while recipe name ' +
                             'and ingredients as string'}), 400
@@ -1401,7 +1143,6 @@ def update_recipe(category_id, recipe_id):
                                 'recipe name and ingredients'}), 400
         # get any other exception
         except Exception as ex:
-            traceback.print_exc()
             return jsonify({'Error': str(ex)}), 500
     return jsonify(error), 401
 
@@ -1466,7 +1207,6 @@ def delete_recipe(category_id, recipe_id):
             return jsonify({'message': 'Category not found'}), 404
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry, please provide the ' +
                             'category id and recipe id as integers'}), 400
         # capture bad request
@@ -1584,7 +1324,6 @@ def view_category_recipes(category_id):
             return jsonify({'message': 'category not found'}), 404
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry, please provide the ' +
                             'category id as integer while recipe name ' +
                             'and ingredients as string'}), 400
@@ -1668,7 +1407,6 @@ def view_one_recipe(category_id, recipe_id):
                 return jsonify({'message': 'no recipes found'}), 404
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry, please provide the ' +
                             'category id and recipe id as integers'}), 400
         # capture bad request
@@ -1744,7 +1482,7 @@ def search_categories():
             per_page = int(request.args.get('per_page', 5))
             user_id = Users.decode_token(token)
             # check if q is a string and not empty
-            check_response = check_values({'q':q})
+            check_response = check_values({'q': q})
             if check_response:
                 # get category object
                 user_categories = Category.query.filter(and_(
@@ -1776,7 +1514,6 @@ def search_categories():
 
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry, please provide ' +
                             'q as a string'}), 400
         # capture bad request
@@ -1859,7 +1596,7 @@ def search_recipes():
             per_page = int(request.args.get('per_page', 5))
             user_id = Users.decode_token(token)
             # check if q is a string and not empty
-            check_response = check_values({'q':q})
+            check_response = check_values({'q': q})
             if check_response:
                 # query for recipes that a closely related searched string
                 found_recipes = Category.query.join(
@@ -1874,7 +1611,6 @@ def search_recipes():
                 number_of_pages = found_recipes.pages
                 next_page = found_recipes.next_num
                 previous_page = found_recipes.prev_num
-                print(">>>>>", found_recipes)
                 results = []
                 for recipe in found_recipes.items:
                     result = {
@@ -1895,7 +1631,6 @@ def search_recipes():
             return jsonify(error), 400
         # capture value error
         except ValueError as ex:
-            traceback.print_exc()
             return jsonify({'Error': 'Invalid entry, please provide ' +
                             'q as a string'}), 400
         # capture bad request
