@@ -1,5 +1,5 @@
 from flask import request
-from app.models import Users
+from app.models.users import Users
 import re
 from jwt import ExpiredSignatureError, InvalidTokenError
 
@@ -50,17 +50,17 @@ def check_token():
         token = auth_header.split(" ")[1]
         if Users.decode_token(token):
             return token
-    except InvalidTokenError as ex:
-        error['Error'] = ex
+    except InvalidTokenError:
+        error['Error'] = 'Invalid token'
         return False
     except ExpiredSignatureError as ex:
-        error['Error'] = ex
+        error['Error'] = 'The token is expired'
         return False
     except AttributeError:
         error['Error'] = 'Please provide a token'
         return False
-    except ValueError as ex:
-        error['Error'] = "you sent an " + str(ex)
+    except ValueError:
+        error['Error'] = "you sent an invalid token"
         return False
     except Exception as ex:
         error['Error'] = str(ex)
@@ -195,6 +195,22 @@ def validate_name(fullname):
             'than 50 characters'
     error['Error'] = 'Your firstname and lastname must ' \
         'be seperated by a space'
+    return False
+
+
+def validate_email(email):
+    """Validate user email addresses"""
+    if re.match(r'[a-zA-Z0-9.-]+@[a-z]+\.[a-z]+', email):
+        return True
+    error['Error'] = 'Invalid email address'
+    return False
+
+
+def validate_descriptions(description):
+    """Validate item description"""
+    if len(description) <= 200:
+        return True
+    error['Error'] = 'Description is too long'
     return False
 
 

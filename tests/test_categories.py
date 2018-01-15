@@ -2,12 +2,10 @@ from tests.test_base import BaseTestCase
 import json
 
 
-class TestCatrgories(BaseTestCase):
-    # testing categories
+class TestCategories(BaseTestCase):
+    """ Testing categories """
     def test_create_category(self):
-        """
-        Test the creation of a category
-        """
+        """Test the creation of a category"""
         self.create_user()
         with self.client:
             headers = self.helper_login_with_token()
@@ -15,9 +13,12 @@ class TestCatrgories(BaseTestCase):
                                         content_type='application/json',
                                         headers=headers,
                                         data=json.dumps(
-                                            dict(category_name='Meat')))
+                                           dict(
+                                               category_name='local beef',
+                                               category_description=self.test_category_description
+                                            )))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['category_name'], "Meat")
+            self.assertEqual(reply['category_name'], "local beef")
             self.assertEqual(reply['message'], 'category created')
             self.assertTrue(reply['id'], msg='no id')
 
@@ -62,7 +63,6 @@ class TestCatrgories(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['count'], "0")
             self.assertEqual(reply['message'], 'category not found')
 
     def test_updating_category(self):
@@ -74,7 +74,10 @@ class TestCatrgories(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers,
                                        data=json.dumps(
-                                           dict(category_name='local beef')))
+                                           dict(
+                                               category_name='local beef',
+                                               category_description=self.test_category_description
+                                           )))
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'category updated')
             self.assertEqual(reply['category_name'], 'local beef')
@@ -88,6 +91,21 @@ class TestCatrgories(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers,
                                        data=json.dumps(
-                                           dict(category_name='local beef')))
+                                           dict(
+                                               category_name='local beef',
+                                               category_description=self.test_category_description
+                                           )))
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'category not found')
+
+    def test_retrieving_more_pages(self):
+        self.create_user()
+        self.create_category()
+        with self.client:
+            headers = self.helper_login_with_token()
+            response = self.client.get('/category/?page=8',
+                                       content_type='application/json',
+                                       headers=headers)
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['Error'], 'Page does not exist')
+

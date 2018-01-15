@@ -64,7 +64,7 @@ class TestPasswordReset(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers,
                                        data=json.dumps(
-                                           dict(password='pass',
+                                           dict(password=self.test_user_password,
                                                 new_password='pass12',
                                                 confirm_password='pass123')))
             reply = json.loads(response.data.decode())
@@ -78,7 +78,7 @@ class TestPasswordReset(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers,
                                        data=json.dumps(
-                                           dict(password='pass',
+                                           dict(password=self.test_user_password,
                                                 new_password='pass123',
                                                 confirm_password='pass123')))
             reply = json.loads(response.data.decode())

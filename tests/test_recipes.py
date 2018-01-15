@@ -14,6 +14,7 @@ class TestRecipes(BaseTestCase):
                                         headers=headers,
                                         data=json.dumps(
                                             dict(recipe_name='ugandan meat',
+                                                 description=self.test_recipe_description,
                                                  ingredients="beef, onions")))
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'Recipe created')
@@ -68,6 +69,7 @@ class TestRecipes(BaseTestCase):
                                        data=json.dumps(
                                            dict(recipe_name="Ugandan beef",
                                                 recipe_category_id=1,
+                                                description=self.test_recipe_description,
                                                 ingredients="beef, onions")))
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['message'], 'Recipe updated')
@@ -84,6 +86,7 @@ class TestRecipes(BaseTestCase):
                                        data=json.dumps(
                                            dict(recipe_name="Ugandan beef",
                                                 recipe_category_id=1,
+                                                description=self.test_recipe_description,
                                                 ingredients="beef, onions")))
             reply = json.loads(response.data.decode())
             print('----', reply)

@@ -1,7 +1,7 @@
 from flask import Flask, jsonify
 from flask_sqlalchemy import SQLAlchemy
 import os
-from app.config import DevelopingConfig
+from configuration.config import DevelopingConfig
 from flasgger import Swagger
 from flask_login import LoginManager
 
@@ -33,7 +33,9 @@ db = SQLAlchemy(app)
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-from app.views import *
+from app.views.users import UserView
+from app.views.category import CategoryView
+from app.views.recipes import RecipesView
 
 
 @app.errorhandler(404)
