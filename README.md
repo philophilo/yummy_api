@@ -18,8 +18,8 @@ Yummy Recipes is an application that allow users to keep track of their owesome 
 
 # Installations
 
-* Create a new folder  ``mkdire webapp``
-* ``cd Desktop/webapp``
+* Create a new folder  ``mkdir webapp``
+* ``cd webapp/``
 * Install virtualenv ``$pip install virtualenv``
 * Create a virtual environment ``virtualenv -p python3 venv``
 * Clone the repo ``https://github.com/philophilo/yummy_api.git``
