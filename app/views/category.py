@@ -17,7 +17,7 @@ from app.serializer import (check_data_keys, check_values,
 class CategoryView():
     """The class has views for categories"""
     @app.route('/category', methods=['POST'])
-    @swag_from('docs/categorycreatecategory.yml')
+    @swag_from('/app/docs/categorycreatecategory.yml')
     def create_category():
         """The function creates a new category"""
         token = check_token()
@@ -75,7 +75,7 @@ class CategoryView():
 
     @app.route('/category/', methods=['GET'])
     @login_required
-    @swag_from('docs/categoryviewallcategories.yml')
+    @swag_from('/app/docs/categoryviewallcategories.yml')
     def view_all_categories():
         """The function returns all categories"""
         token = check_token()
@@ -90,7 +90,7 @@ class CategoryView():
                 user_categories = Category.query.filter_by(
                     user_id=user_id).paginate(page, per_page, False)
                 # check if the object is not None
-                if user_categories is not None:
+                if user_categories.items:
                     # list to store dictionaries of categories
                     results = []
                     # ----set pagination values----
@@ -101,34 +101,38 @@ class CategoryView():
                     # ---end
                     # loop through the object retrieve all categories
                     # and store in results
-                    if page <= number_of_pages:
-                        for category in user_categories.items:
-                            # get single category
-                            result = {
-                                'id': category.cat_id,
-                                'category_name': category.cat_name,
-                                'category_description': category.cat_description
-                            }
-                            # append category in results list
-                            results.append(result)
-                        # return response with list of found categories attached
-                        return jsonify({'categories': results,
-                                        'count': str(len(results)),
-                                        'current_page': current_page,
-                                        'number_of_pages': number_of_pages,
-                                        'next_page': next_page,
-                                        'previous_page': previous_page,
-                                        'message': 'categories found'}), 200
-                    return jsonify({'Error': 'Page does not exist'})
+                    for category in user_categories.items:
+                        # get single category
+                        result = {
+                            'id': category.cat_id,
+                            'category_name': category.cat_name,
+                            'category_description': category.cat_description
+                        }
+                        # append category in results list
+                        results.append(result)
+                    # return response with list of found categories attached
+                    return jsonify({'categories': results,
+                                    'count': str(len(results)),
+                                    'current_page': current_page,
+                                    'number_of_pages': number_of_pages,
+                                    'next_page': next_page,
+                                    'previous_page': previous_page,
+                                    'message': 'categories found'}), 200
                 return jsonify({'message': 'no categories found'}), 404
+            # capture value error
+            except ValueError as ex:
+                return jsonify({'Error': 'Invalid entry'}), 400
+            # capture bad request
+            except BadRequest:
+                    return jsonify({'Error': 'Please parse the q ' +
+                                    'parameter'}), 400
             except Exception as ex:
                 return jsonify({'Error': str(ex)}), 400
-
         return jsonify(error), 401
 
     @app.route('/category/<int:category_id>', methods=['GET'])
     @login_required
-    @swag_from('docs/categoryviewacategory.yml')
+    @swag_from('/app/docs/categoryviewacategory.yml')
     def view_a_category(category_id):
         """The function returns one category"""
         token = check_token()
@@ -156,7 +160,7 @@ class CategoryView():
 
     @app.route('/category/<int:category_id>', methods=['PUT'])
     @login_required
-    @swag_from('docs/categoryupdateacategory.yml')
+    @swag_from('/app/docs/categoryupdateacategory.yml')
     def update_category(category_id):
         """The function updates a category"""
         # check token
@@ -196,7 +200,7 @@ class CategoryView():
                 else:
                     return jsonify(error), 400
             except IntegrityError:
-                return jsonify({'Error': 'Category name already exists'}), 409
+                return jsonify({'Error': 'Recipe name already exists'}), 409
             # capture value error
             except ValueError as ex:
                 return jsonify({'Error': 'Invalid entry, please provide the ' +
@@ -213,7 +217,7 @@ class CategoryView():
 
     @app.route('/category/<int:category_id>', methods=['DELETE'])
     @login_required
-    @swag_from('docs/categorydeletecategory.yml')
+    @swag_from('/app/docs/categorydeletecategory.yml')
     def delete_category(category_id):
         """The function deletes a category"""
         token = check_token()
@@ -229,7 +233,7 @@ class CategoryView():
                     # delete the category and commit
                     user_category.delete()
                     # return response
-                    return ('', 204)
+                    return jsonify({'message': 'category deleted'}), 200
                 return jsonify({'message': 'category not found'})
             # capture value error
             except ValueError as ex:
@@ -244,7 +248,7 @@ class CategoryView():
 
     @app.route('/category/search/', methods=['GET'])
     @login_required
-    @swag_from('docs/categorysearchcategories.yml')
+    @swag_from('/app/docs/categorysearchcategories.yml')
     def search_categories():
         """The function searches and returns categories"""
         token = check_token()
@@ -264,7 +268,7 @@ class CategoryView():
                         Category.cat_name.ilike('%'+q+'%'))).paginate(
                             page, per_page, False)
                     # check the object id not None
-                    if user_categories is not None:
+                    if user_categories.items:
                         # -----pagination properties----
                         current_page = user_categories.page
                         number_of_pages = user_categories.pages
@@ -278,12 +282,13 @@ class CategoryView():
                                 'category_name': category.cat_name,
                             }
                             results.append(result)
-                    return jsonify({'categories': results,
-                                    'current_page': current_page,
-                                    'number_of_pages': number_of_pages,
-                                    'next_page': next_page,
-                                    'previous_page': previous_page,
-                                    'message': 'Categories found'}), 200
+                        return jsonify({'categories': results,
+                                        'current_page': current_page,
+                                        'number_of_pages': number_of_pages,
+                                        'next_page': next_page,
+                                        'previous_page': previous_page,
+                                        'message': 'Categories found'}), 200
+                    return jsonify({'Error': 'category not found'}), 404
                 return jsonify(error), 400
 
             # capture value error
@@ -296,5 +301,7 @@ class CategoryView():
                                     'parameter'}), 400
             # get any other exception
             except Exception as ex:
+                import traceback
+                traceback.print_exc()
                 return jsonify({'Error': str(ex)}), 400
         return jsonify(error), 401

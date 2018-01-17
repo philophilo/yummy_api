@@ -28,7 +28,7 @@ def load_user(user_username):
 class UserView():
     """The class views for user account"""
     @app.route('/auth/register', methods=['POST'])
-    @swag_from('docs/userregister.yml')
+    @swag_from('/app/docs/userregister.yml')
     def user_register():
         """The function registers a new user"""
         try:
@@ -45,13 +45,19 @@ class UserView():
                         validate_name(valid_data['name']) and \
                         validate_password(valid_data['password']) and \
                         validate_email(valid_data['email']):
-                    # parse data to Users model
-                    user = Users(valid_data['username'],
-                                 generate_password_hash(valid_data['password']),
-                                 valid_data['name'], valid_data['email'])
-                    # add and commit to the database
-                    user.add()
-                    return jsonify({'username': user.user_username}), 201
+                    check_user = Users.query.filter_by(
+                        user_username=valid_data['username']).first()
+                    if check_user is None:
+                        # parse data to Users model
+                        user = Users(valid_data['username'],
+                                     generate_password_hash(
+                                        valid_data['password']),
+                                     valid_data['name'], valid_data['email'])
+                        # add and commit to the database
+                        user.add()
+                        return jsonify({'username': user.user_username}), 201
+                    return jsonify({'Error': 'The username already ' +
+                                    'exists'}), 409
                 else:
                     return jsonify(error), 400
             else:
@@ -60,8 +66,10 @@ class UserView():
             return jsonify({'Error':
                             str(ex)+' key is missing'}), 400
         except IntegrityError:
+            import traceback
+            traceback.print_exc()
             return jsonify({'Error':
-                            'The username already exits'}), 409
+                            'The email already exits'}), 409
         except ValueError as ex:
             return jsonify({'Error': str(ex)}), 400
         except BadRequest:
@@ -73,7 +81,7 @@ class UserView():
             return jsonify({'Error': str(ex)}), 400
 
     @app.route("/auth/login", methods=['POST'])
-    @swag_from('docs/userlogin.yml')
+    @swag_from('/app/docs/userlogin.yml')
     def login():
         """The function logs in a new user"""
         try:
@@ -111,7 +119,7 @@ class UserView():
 
     @app.route('/auth/reset-password', methods=['PUT'])
     @login_required
-    @swag_from('docs/userresetpassword.yml')
+    @swag_from('/app/docs/userresetpassword.yml')
     def reset_password():
         """The function updates a user's password"""
         token = check_token()
@@ -162,7 +170,7 @@ class UserView():
 
     @app.route('/auth/delete-account', methods=['DELETE'])
     @login_required
-    @swag_from('docs/userdeleteaccount.yml')
+    @swag_from('/app/docs/userdeleteaccount.yml')
     def delete_account():
         """The function deletes a user's account"""
         token = check_token()
@@ -196,7 +204,7 @@ class UserView():
 
     @app.route('/auth/logout', methods=['POST'])
     @login_required
-    @swag_from('docs/userlogout.yml')
+    @swag_from('/app/docs/userlogout.yml')
     def logout():
         """The function ends a user's session and blacklists the token"""
         try:

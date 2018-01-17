@@ -5,11 +5,14 @@ import json
 class TestRecipes(BaseTestCase):
     # -----recipe tests
     def test_create_recipe(self):
+        """
+        Test creating a new recipe
+        """
         self.create_user()
         self.create_category()
         with self.client:
             headers = self.helper_login_with_token()
-            response = self.client.post('/category/recipes/1',
+            response = self.client.post('/category/1/recipes/',
                                         content_type='application/json',
                                         headers=headers,
                                         data=json.dumps(
@@ -28,7 +31,7 @@ class TestRecipes(BaseTestCase):
         self.create_recipe()
         with self.client:
             headers = self.helper_login_with_token()
-            response = self.client.get('/category/recipes/1',
+            response = self.client.get('/category/1/recipes/',
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())
@@ -48,10 +51,11 @@ class TestRecipes(BaseTestCase):
         self.create_recipe()
         with self.client:
             headers = self.helper_login_with_token()
-            response = self.client.get('/category/recipes/2',
+            response = self.client.get('/category/2/recipes/',
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())
+            print('****', reply)
             self.assertEqual(reply['message'], 'category not found')
 
     def test_updating_known_recipe(self):
@@ -63,7 +67,7 @@ class TestRecipes(BaseTestCase):
         self.create_recipe()
         with self.client:
             headers = self.helper_login_with_token()
-            response = self.client.put('/category/recipes/1/1',
+            response = self.client.put('/category/1/recipes/1',
                                        content_type='application/json',
                                        headers=headers,
                                        data=json.dumps(
@@ -75,12 +79,15 @@ class TestRecipes(BaseTestCase):
             self.assertEqual(reply['message'], 'Recipe updated')
 
     def test_updating_unknown_recipe(self):
+        """
+        Test updating an unkown recipe
+        """
         self.create_user()
         self.create_category()
         self.create_recipe()
         with self.client:
             headers = self.helper_login_with_token()
-            response = self.client.put('/category/recipes/1/1',
+            response = self.client.put('/category/1/recipes/2',
                                        content_type='application/json',
                                        headers=headers,
                                        data=json.dumps(
@@ -90,42 +97,54 @@ class TestRecipes(BaseTestCase):
                                                 ingredients="beef, onions")))
             reply = json.loads(response.data.decode())
             print('----', reply)
-            self.assertEqual(reply['message'], 'Recipe updated')
+            self.assertEqual(reply['Error'], 'Recipe not found')
 
     def test_deleting_known_recipe(self):
+        """
+        Test deleting a known recipe
+        """
         self.create_user()
         self.create_category()
         self.create_recipe()
         with self.client:
             headers = self.helper_login_with_token()
-            response = self.client.delete('/category/recipes/1/1',
+            response = self.client.delete('/category/1/recipes/1',
                                           content_type='application/json',
-                                          headers=headers,
-                                          data=json.dumps(
-                                              dict(recipe_name="Ugandan beef")))
-            self.assertEquals(response.status_code, 204)
+                                          headers=headers
+                                          )
+            reply = json.loads(response.data.decode())
+            print('-----', reply)
+            self.assertEquals(reply['message'], 'recipe deleted')
+            self.assertEquals(response.status_code, 200)
 
     def test_deleting_unknown_recipe(self):
+        """
+        Test deleting unknown recipe
+        """
         self.create_user()
         self.create_category()
         self.create_recipe()
         with self.client:
             headers = self.helper_login_with_token()
-            response = self.client.delete('/category/recipes/1/2',
+            response = self.client.delete('/category/1/recipes/2',
                                           content_type='application/json',
                                           headers=headers,
                                           data=json.dumps(
-                                              dict(recipe_name="Ugandan beef")))
+                                              dict(recipe_name="Ugandan beef"))
+                                          )
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'Recipe not found')
+            self.assertEqual(reply['Error'], 'Recipe not found')
 
     def test_deleting_recipe_from_unknown_category(self):
+        """
+        Test deleting recipe from unknown category
+        """
         self.create_user()
         self.create_category()
         self.create_recipe()
         with self.client:
             headers = self.helper_login_with_token()
-            response = self.client.delete('/category/recipes/2/1',
+            response = self.client.delete('/category/2/recipes/1',
                                           content_type='application/json',
                                           headers=headers,
                                           data=json.dumps(
@@ -158,4 +177,6 @@ class TestRecipes(BaseTestCase):
                                           headers=headers,
                                           data=json.dumps(
                                               dict(category_name="Meat")))
-            self.assertEqual(response.status_code, 204)
+            reply = json.loads(response.data.decode())
+            self.assertEqual(reply['message'], 'category deleted')
+            self.assertEqual(response.status_code, 200)

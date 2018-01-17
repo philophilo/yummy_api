@@ -107,5 +107,6 @@ class TestCategories(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['Error'], 'Page does not exist')
+            print('----', reply)
+            self.assertEqual(reply['message'], 'no categories found')
 

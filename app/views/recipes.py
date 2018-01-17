@@ -16,9 +16,9 @@ from app.serializer import (check_data_keys, check_values,
 
 class RecipesView():
     """The class has the views for recipes"""
-    @app.route('/category/recipes/<int:category_id>', methods=['POST'])
+    @app.route('/category/<int:category_id>/recipes/', methods=['POST'])
     @login_required
-    @swag_from('docs/recipesaddrecipe.yml')
+    @swag_from('/app/docs/recipesaddrecipe.yml')
     def add_recipe(category_id):
         """The function adds recipes to the database"""
         token = check_token()
@@ -53,7 +53,8 @@ class RecipesView():
                         # return response
                         return jsonify({'recipe_id': recipe.rec_id,
                                         'recipe_name': recipe.rec_name,
-                                        'category_name': recipe.rec_cat,
+                                        'category_name':
+                                        user_category.cat_name,
                                         'ingredients':
                                         recipe.rec_ingredients.split(','),
                                         'message': 'Recipe created'}), 201
@@ -78,10 +79,10 @@ class RecipesView():
         return jsonify(error), 401
 
     # TODO remove the <int: category> parameter
-    @app.route('/category/recipes/<int:category_id>/<int:recipe_id>',
+    @app.route('/category/<int:category_id>/recipes/<int:recipe_id>',
                methods=['PUT'])
     @login_required
-    @swag_from('docs/recipesupdaterecipe.yml')
+    @swag_from('/app/docs/recipesupdaterecipe.yml')
     def update_recipe(category_id, recipe_id):
         """The function updates a recipe"""
         token = check_token()
@@ -160,10 +161,10 @@ class RecipesView():
         return jsonify(error), 401
 
     # TODO remove the category_id from the route
-    @app.route('/category/recipes/<int:category_id>/<int:recipe_id>',
+    @app.route('/category/<int:category_id>/recipes/<int:recipe_id>',
                methods=['DELETE'])
     @login_required
-    @swag_from('docs/recipesdeleterecipe.yml')
+    @swag_from('/app/docs/recipesdeleterecipe.yml')
     def delete_recipe(category_id, recipe_id):
         """The function delete a recipe"""
         token = check_token()
@@ -184,8 +185,8 @@ class RecipesView():
                         # delete and commit changes to the database
                         user_recipe.delete()
                         # return response
-                        return '', 204
-                    return jsonify({'message': 'Recipe not found'}), 404
+                        return jsonify({'message': 'recipe deleted'}), 200
+                    return jsonify({'Error': 'Recipe not found'}), 404
                 return jsonify({'message': 'Category not found'}), 404
             # capture value error
             except ValueError as ex:
@@ -200,9 +201,9 @@ class RecipesView():
                 return jsonify({'Error': str(ex)}), 400
         return jsonify(error), 401
 
-    @app.route('/category/recipes/<int:category_id>', methods=['GET'])
+    @app.route('/category/<int:category_id>/recipes/', methods=['GET'])
     @login_required
-    @swag_from('docs/recipesviewcategoryrecipes.yml')
+    @swag_from('/app/docs/recipesviewcategoryrecipes.yml')
     def view_category_recipes(category_id):
         """The function return recipes in a category"""
         token = check_token()
@@ -223,36 +224,39 @@ class RecipesView():
                     user_recipes = Recipes.query.filter_by(
                         rec_cat=category_id).paginate(page, per_page, False)
                     # check recipes object is not None
-                    if user_recipes is not None:
+                    if user_recipes.items:
                         # -----pagination properties----
                         current_page = user_recipes.page
                         number_of_pages = user_recipes.pages
                         next_page = user_recipes.next_num
                         previous_page = user_recipes.prev_num
                         # -----
-                        # a list of all recipe dictionary
-                        results = []
-                        # loop through the paginated recipes object
-                        for recipe in user_recipes.items:
-                            # for each recipe store in dictionary
-                            result = {
-                                'id': recipe.rec_id,
-                                'recipe_name': recipe.rec_name,
-                                'description': recipe.rec_description,
-                                'ingredients': recipe.rec_ingredients.split(",")
-                            }
-                            # append the dictionary to list
-                            results.append(result)
-                        # return the response with list of recipes
-                        return jsonify({'recipes': results,
-                                        'count': str(len(results)),
-                                        'current_page': current_page,
-                                        'number_of_pages': number_of_pages,
-                                        'category_name':
-                                        user_categories.cat_name,
-                                        'next_page': next_page,
-                                        'previous_page': previous_page,
-                                        'messages': 'recipes found'}), 200
+                        if page <= number_of_pages:
+                            # a list of all recipe dictionary
+                            results = []
+                            # loop through the paginated recipes object
+                            for recipe in user_recipes.items:
+                                # for each recipe store in dictionary
+                                result = {
+                                    'id': recipe.rec_id,
+                                    'recipe_name': recipe.rec_name,
+                                    'description': recipe.rec_description,
+                                    'ingredients':
+                                    recipe.rec_ingredients.split(",")
+                                }
+                                # append the dictionary to list
+                                results.append(result)
+                            # return the response with list of recipes
+                            return jsonify({'recipes': results,
+                                            'count': str(len(results)),
+                                            'current_page': current_page,
+                                            'number_of_pages': number_of_pages,
+                                            'category_name':
+                                            user_categories.cat_name,
+                                            'next_page': next_page,
+                                            'previous_page': previous_page,
+                                            'messages': 'recipes found'}), 200
+                        return jsonify({'message': 'Page not found'}), 404
                     return jsonify({'message': 'no recipes found'}), 404
                 return jsonify({'message': 'category not found'}), 404
             # capture value error
@@ -270,10 +274,10 @@ class RecipesView():
                 return jsonify({'Error': str(ex)}), 400
         return jsonify(error), 401
 
-    @app.route('/category/recipes/one/<int:category_id>/<int:recipe_id>',
+    @app.route('/category/<int:category_id>/recipes/<int:recipe_id>/one/',
                methods=['GET'])
     @login_required
-    @swag_from('docs/recipesviewonerecipe.yml')
+    @swag_from('/app/docs/recipesviewonerecipe.yml')
     def view_one_recipe(category_id, recipe_id):
         """The function returns one recipe"""
         # check token
@@ -324,7 +328,7 @@ class RecipesView():
 
     @app.route('/recipes/search/', methods=['GET'])
     @login_required
-    @swag_from('docs/recipessearchrecipes.yml')
+    @swag_from('/app/docs/recipessearchrecipes.yml')
     def search_recipes():
         """The function searches and returns recipes in the database"""
         token = check_token()
@@ -353,25 +357,27 @@ class RecipesView():
                     number_of_pages = found_recipes.pages
                     next_page = found_recipes.next_num
                     previous_page = found_recipes.prev_num
-                    results = []
-                    for recipe in found_recipes.items:
-                        print('=====', recipe)
-                        result = {
-                            'category_id': recipe.cat_id,
-                            'category_name': recipe.cat_name,
-                            'recipe_id': recipe.rec_id,
-                            'recipe_name': recipe.rec_name,
-                            'description': recipe.rec_description,
-                            'recipes_ingredients': recipe.rec_ingredients
-                        }
-                        results.append(result)
-                    return jsonify({'categories': results,
-                                    'count': str(len(results)),
-                                    'current_page': current_page,
-                                    'number_of_pages': number_of_pages,
-                                    'next_page': next_page,
-                                    'previous_page': previous_page,
-                                    'message': 'Recipes found'}), 200
+                    if page <= number_of_pages:
+                        results = []
+                        for recipe in found_recipes.items:
+                            print('=====', recipe)
+                            result = {
+                                'category_id': recipe.cat_id,
+                                'category_name': recipe.cat_name,
+                                'recipe_id': recipe.rec_id,
+                                'recipe_name': recipe.rec_name,
+                                'description': recipe.rec_description,
+                                'recipes_ingredients': recipe.rec_ingredients
+                            }
+                            results.append(result)
+                        return jsonify({'categories': results,
+                                        'count': str(len(results)),
+                                        'current_page': current_page,
+                                        'number_of_pages': number_of_pages,
+                                        'next_page': next_page,
+                                        'previous_page': previous_page,
+                                        'message': 'Recipes found'}), 200
+                    return jsonify({'Error': 'Page not found'}), 404
                 return jsonify(error), 400
             # capture value error
             except ValueError as ex:

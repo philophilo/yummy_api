@@ -194,7 +194,7 @@ def validate_name(fullname):
         error['Error'] = 'Firstname and lastname cannot be more ' \
             'than 50 characters'
     error['Error'] = 'Your firstname and lastname must ' \
-        'be seperated by a space'
+        'be alphabetical and seperated by a space'
     return False
 
 

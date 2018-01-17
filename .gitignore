@@ -2,6 +2,7 @@
 .ropeproject
 .git/
 .DS_Store
+.vscode/
 app/__pycache__/
 tests/__pycache__/
 venvapi/
