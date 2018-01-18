@@ -33,18 +33,18 @@ class UserView():
         """The function registers a new user"""
         try:
             data = request.json
-            if validation(data, ['username', 'name', 'password', 'email']):
-                if valid_register:
-                    check_user = Users.query.filter_by(
-                        user_username=valid_data['username']).first()
-                    if check_user is None:
-                        user = Users(valid_data['username'],
-                                     generate_password_hash(
-                                        valid_data['password']),
-                                     valid_data['name'], valid_data['email'])
-                        user.add()
-                        return jsonify({'username': user.user_username}), 201
-                    return jsonify({'Error': 'Username already exists'}), 409
+            if validation(data, ['username', 'name', 'password', 'email']) \
+                    and valid_register:
+                check_user = Users.query.filter_by(
+                    user_username=valid_data['username']).first()
+                if check_user is None:
+                    user = Users(valid_data['username'],
+                                    generate_password_hash(
+                                    valid_data['password']),
+                                    valid_data['name'], valid_data['email'])
+                    user.add()
+                    return jsonify({'username': user.user_username}), 201
+                return jsonify({'Error': 'Username already exists'}), 409
             return jsonify(error), 400
         except Exception as ex:
             excepts = {'KeyError': {'Error': str(ex).strip('\'')+' key is ' +
