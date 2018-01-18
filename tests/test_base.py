@@ -18,6 +18,7 @@ class BaseTestCase(TestCase):
     test_category_name = "Meat"
     test_category_description = "Strictly beef"
     test_recipe = "local beef"
+    test_recipe2 = "italian beef"
     test_recipe_description = "Ugandan beef"
     test_recipe_ingredients = "onions, meat, tomatoes"
 
@@ -52,6 +53,12 @@ class BaseTestCase(TestCase):
                                 description=self.test_recipe_description,
                                 ingredients=self.test_recipe_ingredients,
                                 date=datetime.now())
+        recipe2 = Recipes(name=self.test_recipe2,
+                                category=1,
+                                description=self.test_recipe_description,
+                                ingredients=self.test_recipe_ingredients,
+                                date=datetime.now())
+        recipe2.add()
         recipe.add()
 
     def helper_login(self):

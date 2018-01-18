@@ -5,7 +5,7 @@ import json
 class TestDeleteAccount(BaseTestCase):
     # ---delete account tests
     def test_deleting_account_without_password_key(self):
-        """Test deletinga user account without a password key"""
+        """Test deleting a user account without a password key"""
         self.create_user()
         self.create_category()
         self.create_recipe()
@@ -29,8 +29,7 @@ class TestDeleteAccount(BaseTestCase):
                                           data=json.dumps(
                                               dict(password='')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['Error'], 'Please provide a password ' +
-                             'key and value')
+            self.assertEqual(reply['Error'], 'password is empty')
 
     def test_deleting_account_with_wrong_password(self):
         """Test deleting an account with wrong password"""

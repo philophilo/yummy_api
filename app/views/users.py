@@ -34,7 +34,7 @@ class UserView():
         try:
             data = request.json
             if validation(data, ['username', 'name', 'password', 'email']) \
-                    and valid_register:
+                    and valid_register():
                 check_user = Users.query.filter_by(
                     user_username=valid_data['username']).first()
                 if check_user is None:

@@ -10,7 +10,7 @@ from datetime import datetime
 from werkzeug.exceptions import BadRequest
 from app.serializer import (check_data_keys, check_values,
                             valid_data, validate_descriptions,
-                            error,
+                            error, validate_item_names,
                             check_token)
 
 
@@ -39,6 +39,7 @@ class RecipesView():
                     # check that the expected data is string and not empty
                     check_responses = check_values(data)
                     if check_responses and expected_data and \
+                            validate_item_names(valid_data['recipe_name']) and \
                             validate_descriptions(valid_data['description']):
                         # create a recipe object
                         recipe = Recipes(name=valid_data['recipe_name'],
@@ -255,7 +256,7 @@ class RecipesView():
                                             user_categories.cat_name,
                                             'next_page': next_page,
                                             'previous_page': previous_page,
-                                            'messages': 'recipes found'}), 200
+                                            'message': 'recipes found'}), 200
                         return jsonify({'message': 'Page not found'}), 404
                     return jsonify({'message': 'no recipes found'}), 404
                 return jsonify({'message': 'category not found'}), 404
@@ -306,12 +307,12 @@ class RecipesView():
                                 'recipe_name': recipe.rec_name,
                                 'description': recipe.rec_description,
                                 'ingredients':
-                                recipe.rec_ingredients.split(","),
-                                'message': 'recipe found'
+                                recipe.rec_ingredients.split(",")
                             }
                             results.append(result)
                         return jsonify({'recipes': results,
-                                        'count': str(len(results))}), 200
+                                        'message': 'recipe found',
+                                        'count': len(results)}), 200
                     return jsonify({'message': 'no recipes found'}), 404
             # capture value error
             except ValueError as ex:

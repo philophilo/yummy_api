@@ -29,9 +29,11 @@ def check_values(details):
             cleaned_value = check_empty_spaces(value)
             if not cleaned_value:
                 error['Error'] = key+' is empty'
+                return False
             valid_data[key] = cleaned_value
         else:
             error['Error'] = key+' is not a string'
+            return False
     return True
 
 
@@ -49,22 +51,12 @@ def check_token():
         error['Error'] = 'The token is expired'
     except AttributeError:
         error['Error'] = 'Please provide a token'
-    except ValueError:
-        error['Error'] = "you sent an invalid token"
-    except Exception as ex:
-        error['Error'] = str(ex)
 
 
 def handle_exceptions(ex, expected):
     if ex in expected:
         return expected[ex]
     return {'Error': str(ex)}
-
-
-def check_string(value):
-    """check that the value is strictly a string"""
-    if isinstance(value, str):
-        return True
 
 
 def check_fullname(name):
@@ -122,6 +114,7 @@ def check_password(password):
 
 def check_password_upper_limit(password):
     """check the upper limit of password"""
+    print(len(password), '.....')
     if len(password) <= 50:
         return True
 
@@ -134,7 +127,7 @@ def check_password_lower_limit(password):
 
 def check_item_name_alphabet(name):
     """check whether name is alphabetical"""
-    if name.isalpha():
+    if re.match("^[a-zA-Z ]+$", name):
         return True
 
 
@@ -153,26 +146,27 @@ def check_item_name_lower_limit(name):
 def validate_username(username):
     """ Validate username constraints """
     if check_username(username):
-        if check_username_upper_limit(username):
-            if check_username_lower_limit(username):
-                return True
-            error['Error'] = 'Username cannot be less than 4'
-        error['Error'] = 'Username must be less than 20'
+        if check_username_upper_limit(username) and \
+                check_username_lower_limit(username):
+            return True
+        error['Error'] = 'Username can have between 4 and 20 characters'
+        return False
     error['Error'] = 'username can have ' \
-        'alphabets, numbers' \
-        ' and selected symbols(\'_ and -\')'
+        'alphabets, numbers and selected symbols(\'_ and -\')'
+    return False
 
 
 def validate_name(fullname):
     """Validate full name constraints"""
     if check_fullname(fullname):
-        if check_upper_limit_fullname(fullname):
-            if check_lower_limit_fullname(fullname):
-                return True
-            error['Error'] = 'Firstname and Lastname cannot be less than 4'
-        error['Error'] = 'Firstname and lastname cannot greater than 50'
+        if check_upper_limit_fullname(fullname) and \
+                check_lower_limit_fullname(fullname):
+            return True
+        error['Error'] = 'Firstname and Lastname cannot be less than 4'
+        return False
     error['Error'] = 'Your firstname and lastname must ' \
         'be alphabetical and seperated by a space'
+    return False
 
 
 def validate_email(email):
@@ -192,26 +186,27 @@ def validate_descriptions(description):
 def validate_password(password):
     """Validate password constraints"""
     if check_password(password):
-        if check_password_upper_limit(password):
-            if check_password_lower_limit(password):
-                return True
-            error['Error'] = 'Password cannot be less than 6 characters'
-        error['Error'] = 'Password cannot be more than 50 characters'
+        if check_password_upper_limit(password) and \
+                check_password_lower_limit(password):
+            return True
+        error['Error'] = 'Password can have between 6 and 50 characters'
+        return False
     error['Error'] = 'Password must have atleast one Block letter, ' \
         'a number and a symbol'
+    return False
 
 
 def validate_item_names(name):
     """Validate item names"""
-    if isinstance(name, str):
-        if check_item_name_alphabet(name):
-            if check_item_name_upper_limit(name):
-                if check_item_name_lower_limit(name):
-                    return True
-                error['Error'] = 'The name cannot have less than 4 characters'
-            error['Error'] = 'The name cannot be more than 6 characters'
-        error['Error'] = 'The name must be from alphabetical letters'
-    error['Error'] = 'The name must be a string'
+    print(name, '**********')
+    if isinstance(name, str) and check_item_name_alphabet(name):
+        if check_item_name_upper_limit(name) and \
+                check_item_name_lower_limit(name):
+            return True
+        error['Error'] = 'The name should have between 4 and 20 characters'
+        return False
+    error['Error'] = 'The name must be from alphabetical letters'
+    return False
 
 
 def check_data_keys(data, expected_keys):
@@ -230,6 +225,7 @@ def validation(data, expected):
         return True
 
 def valid_register():
+    print(valid_data['password'], '========')
     if validate_username(valid_data['username']) and validate_name(
         valid_data['name']) and validate_password(valid_data[
             'password']) and validate_email(valid_data['email']):
