@@ -15,6 +15,7 @@ class TestPasswordReset(BaseTestCase):
                                            dict(new_password='pass123',
                                                 confirm_password='pass123')))
             reply = json.loads(response.data.decode())
+            print(reply)
             self.assertEqual(reply['Error'], 'password key missing')
 
     def test_password_reset_with_wrong_password(self):

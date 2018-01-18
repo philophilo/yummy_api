@@ -3,7 +3,6 @@ from flask import request, jsonify
 from flasgger import swag_from
 from app.models.blacklist import Blacklist
 from app.models.users import Users
-from sqlalchemy.exc import IntegrityError
 from werkzeug.security import (generate_password_hash,
                                check_password_hash)
 from flask_login import (login_user, login_required,
@@ -13,7 +12,7 @@ from werkzeug.exceptions import BadRequest
 from app.serializer import (check_data_keys, check_values,
                             valid_data, validate_username, validate_name,
                             validate_password, error, validate_email,
-                            check_token)
+                            check_token, handle_exceptions, validation)
 
 
 login_manager.login_view = '/'
@@ -33,52 +32,29 @@ class UserView():
         """The function registers a new user"""
         try:
             data = request.json
-            # TODO add email as a requirements
-            # check for expected data
-            expected_data = check_data_keys(data, ['username', 'name',
-                                                   'password', 'email'])
-            # check if values are strings and not empty
-            check_response = check_values(data)
-            if expected_data and check_response:
-                # validate the username, name and password
-                if validate_username(valid_data['username']) and \
-                        validate_name(valid_data['name']) and \
-                        validate_password(valid_data['password']) and \
-                        validate_email(valid_data['email']):
+            if validation(data, ['username', 'name', 'password', 'email']):
+                if validate_username(valid_data['username']) and validate_name(
+                    valid_data['name']) and validate_password(valid_data[
+                        'password']) and validate_email(valid_data['email']):
                     check_user = Users.query.filter_by(
                         user_username=valid_data['username']).first()
                     if check_user is None:
-                        # parse data to Users model
                         user = Users(valid_data['username'],
                                      generate_password_hash(
                                         valid_data['password']),
                                      valid_data['name'], valid_data['email'])
-                        # add and commit to the database
                         user.add()
                         return jsonify({'username': user.user_username}), 201
-                    return jsonify({'Error': 'The username already ' +
-                                    'exists'}), 409
-                else:
-                    return jsonify(error), 400
-            else:
-                return jsonify(error)
-        except KeyError as ex:
-            return jsonify({'Error':
-                            str(ex)+' key is missing'}), 400
-        except IntegrityError:
-            import traceback
-            traceback.print_exc()
-            return jsonify({'Error':
-                            'The email already exits'}), 409
-        except ValueError as ex:
-            return jsonify({'Error': str(ex)}), 400
-        except BadRequest:
-            return jsonify({'Error': 'Please ensure that all ' +
-                            'fields are correctly specified'}), 400
+                    return jsonify({'Error': 'Username already exists'}), 409
+            return jsonify(error), 400
         except Exception as ex:
-            import traceback
-            traceback.print_exc()
-            return jsonify({'Error': str(ex)}), 400
+            excepts = {'KeyError': {'Error': str(ex).strip('\'')+' key is ' +
+                                    'missing'}, 'IntegrityError':
+                       {'Error': 'Email already exists'},
+                       'BadRequest': {'Error': 'All fields keys are required'},
+                       'ValueError': {'Error': str(ex)}
+                       }
+            return jsonify(handle_exceptions(type(ex).__name__, excepts))
 
     @app.route("/auth/login", methods=['POST'])
     @swag_from('/app/docs/userlogin.yml')

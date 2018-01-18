@@ -29,7 +29,8 @@ class TestDeleteAccount(BaseTestCase):
                                           data=json.dumps(
                                               dict(password='')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['Error'], 'password is empty')
+            self.assertEqual(reply['Error'], 'Please provide a password ' +
+                             'key and value')
 
     def test_deleting_account_with_wrong_password(self):
         """Test deleting an account with wrong password"""

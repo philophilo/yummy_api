@@ -31,7 +31,7 @@ class TestUserRegistration(BaseTestCase):
                                                 password=self.test_user_password
                                                 )))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['Error'], 'The username already exists')
+            self.assertEqual(reply['Error'], 'Username already exists')
 
     def test_wrong_user_login_credentials(self):
         """Test authentication with wring user credentials"""
