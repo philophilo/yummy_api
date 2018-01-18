@@ -10,9 +10,10 @@ from flask_login import (login_user, login_required,
 from datetime import datetime
 from werkzeug.exceptions import BadRequest
 from app.serializer import (check_data_keys, check_values,
-                            valid_data, validate_username, validate_name,
-                            validate_password, error, validate_email,
-                            check_token, handle_exceptions, validation)
+                            valid_data, error,
+                            check_token, handle_exceptions, validation,
+                            valid_register
+                            )
 
 
 login_manager.login_view = '/'
@@ -33,9 +34,7 @@ class UserView():
         try:
             data = request.json
             if validation(data, ['username', 'name', 'password', 'email']):
-                if validate_username(valid_data['username']) and validate_name(
-                    valid_data['name']) and validate_password(valid_data[
-                        'password']) and validate_email(valid_data['email']):
+                if valid_register:
                     check_user = Users.query.filter_by(
                         user_username=valid_data['username']).first()
                     if check_user is None:

@@ -228,3 +228,9 @@ def validation(data, expected):
     data_keys = check_data_keys(data, expected)
     if data_keys and check_values(data):
         return True
+
+def valid_register():
+    if validate_username(valid_data['username']) and validate_name(
+        valid_data['name']) and validate_password(valid_data[
+            'password']) and validate_email(valid_data['email']):
+        return True
