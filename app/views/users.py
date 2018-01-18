@@ -52,8 +52,7 @@ class UserView():
                                     'missing'}, 'IntegrityError':
                        {'Error': 'Email already exists'},
                        'BadRequest': {'Error': 'All fields keys are required'},
-                       'ValueError': {'Error': str(ex)}
-                       }
+                       'ValueError': {'Error': str(ex)}}
             return jsonify(handle_exceptions(type(ex).__name__, excepts))
 
     @app.route("/auth/login", methods=['POST'])
