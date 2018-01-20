@@ -62,9 +62,7 @@ class Users(db.Model):
                     return False
             return True
         except:
-            print('---------------')
-            import traceback
-            traceback.print_exc()
+            return False
 
     @staticmethod
     def decode_token(token):

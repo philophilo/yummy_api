@@ -32,3 +32,37 @@ Yummy Recipes is an application that allow users to keep track of their owesome 
 
 # Running tests
 You can test the application using two libraries nose2 or nosetests: ``nose2 --with-coverage` or `nosetests --with-coverage --cover-package=apps``
+
+
+# Running tests
+You can test the application using two libraries nose2 or nosetests: ``nose2 --with-coverage` or `nosetests --with-coverage --cover-package=apps``
+
+# API Endpoints
+### Users
+|              URL Endpoints            | HTTP Requests |                      Access                    | Public Access|
+|---------------------------------------|---------------|------------------------------------------------|--------------|
+|POST /auth/register                    |     POST      | Registers a new user                           |  TRUE        |
+|POST /auth/login                       |     POST      | Authenticates a registered user                |  TRUE        |
+|POST /auth/logout                      |     POST      | Registers a new user                           |  FALSE       |
+|PUT /auth/reset-password               |     PUT       | Resets a registered users's password           |  FALSE       |
+|DELETE /auth/delete-account            |   DELETE      | Deletes a registered user's account            |  FALSE       |
+
+### Categories
+|              URL Endpoints            | HTTP Requests |                      Access                    | Public Access|
+|---------------------------------------|---------------|------------------------------------------------|--------------|
+|POST /category                         |     POST      | Creates a new categroy                         |  FALSE       |
+|PUT /category/\<category_id>           |     PUT       | Edits a category with specified id             |  FALSE       |
+|GET /category                          |     GET       | Retrieves a paginated list of  categories      |  FALSE       |
+|GET /category/\<category_id>           |     GET       | Retrieves a specified category                 |  FALSE       |
+|GET /category/search/\<id>             |     GET       | Retrieves a category with specified id         |  FALSE       |
+|DELETE /category/\<id>                 |     DELETE    | Deletes a category with specified id           |  FALSE       |
+
+### Recipes
+|                    URL Endpoints                    | HTTP Requests |                        Access                        | Public Access|
+|-----------------------------------------------------|---------------|------------------------------------------------------|--------------|
+|POST /category/<category_id>/recipes/                |     POST      | Creates a new recipe                                 |  FALSE       |
+|PUT /category/<category_id>/recipes/\<recipe_id>     |     PUT       | Edits a recipe with specified id                     |  FALSE       |
+|GET /category/<category_id>/recipes/                 |     GET       | Retrieves a paginated lists of recipes               |  FALSE       |
+|GET /recipes/search/                                 |     GET       | Retrieves a list of recipes through GET vairables    |  FALSE       |
+|GET /category/\<category_id>/recipes/\<recipe_id>    |     GET       | Retrieves a list of recipes in a category            |  FALSE       |
+|DELETE /category/\<category_id>/recipes/\<recipe_id> |     DELETE    | Deletes a recipe in category with specified id       |  FALSE       |

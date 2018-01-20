@@ -2,13 +2,25 @@ from flask import request
 from app.models.users import Users
 import re
 from jwt import ExpiredSignatureError, InvalidTokenError
+from flask import jsonify
+from functools import wraps
 
 error = {}
 valid_data = {}
+format_error = {}
+objects = {}
+cleaned_values = {}
+
+
+def create_error(error, code):
+    format_error['error'] = jsonify(error), code
+    return True
 
 
 def check_empty_spaces(string):
     """ Check if a string still has any empty spaces"""
+    if not (isinstance(string, str)):
+        return ' is not a string'
     string = string.strip()
     split_string = string.split(" ")
     number_of_splits = len(split_string)
@@ -17,46 +29,51 @@ def check_empty_spaces(string):
         if len(i) == 0:
             empty_chunks += 1
     if empty_chunks == number_of_splits:
-        return False
+        return ' is empty'
     return string
 
 
 def check_values(details):
     """check that the value is strictly a string"""
     for key, value in details.items():
-        if(isinstance(value, str)):
-            # strip strings of white spaces
-            cleaned_value = check_empty_spaces(value)
-            if not cleaned_value:
-                error['Error'] = key+' is empty'
-                return False
-            valid_data[key] = cleaned_value
+        result = check_empty_spaces(value)
+        if value is result:
+            valid_data[key] = result
         else:
-            error['Error'] = key+' is not a string'
+            error['Error'] = key+''+result
+            create_error(error, 400)
             return False
     return True
 
 
-def check_token():
+def check_token_wrapper(func):
     """check token validity"""
-    token = None
-    try:
-        auth_header = request.headers.get('Authorization')
-        token = auth_header.split(" ")[1]
-        if Users.decode_token(token):
-            return token
-    except InvalidTokenError:
-        error['Error'] = 'Invalid token'
-    except ExpiredSignatureError as ex:
-        error['Error'] = 'The token is expired'
-    except AttributeError:
-        error['Error'] = 'Please provide a token'
+    @wraps(func)
+    def auth(*args, **kwargs):
+        token = None
+        try:
+            auth_header = request.headers.get('Authorization')
+            token = auth_header.split(" ")[1]
+            if Users.decode_token(token):
+                return func(token, *args, **kwargs)
+        except Exception as ex:
+            excepts = {'ValueError': {'Error': 'Invalid token', 'e': 401},
+                       'InvalidTokenError': {'Error': 'Invalid token',
+                                             'e': 401},
+                       'ExpiredSignatureError': {'Error': 'The token is ' +
+                                                 'expired', 'e': 401},
+                       'AttributeError': {'Error': 'Please provide a token',
+                                          'e': 401}}
+            handle_exceptions(type(ex).__name__, excepts)
+            return format_error['error']
+    return auth
 
 
 def handle_exceptions(ex, expected):
+    error, code = {}, 0
     if ex in expected:
-        return expected[ex]
-    return {'Error': str(ex)}
+        error['Error'], code = expected[ex]['Error'], expected[ex]['e']
+    return create_error(error, code) if code else create_error(ex, 400)
 
 
 def check_fullname(name):
@@ -97,19 +114,11 @@ def check_username_lower_limit(username):
 
 def check_password(password):
     """check that the password has numbers, symbols and minimum"""
-    state = True
-    while state:
-        if not re.search("[a-z]", password):
-            break
-        elif not re.search("[0-9]", password):
-            break
-        elif not re.search("[A-Z]", password):
-            break
-        elif not re.search("[!\(\)\[\]@#$%^&*+]", password):
-            break
-        else:
-            state = False
-            return True
+    pattern = re.compile(
+        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]')
+    result = pattern.match(password)
+    if result:
+        return True
 
 
 def check_password_upper_limit(password):
@@ -153,6 +162,7 @@ def validate_username(username):
         return False
     error['Error'] = 'username can have ' \
         'alphabets, numbers and selected symbols(\'_ and -\')'
+    create_error(error, 400)
     return False
 
 
@@ -166,6 +176,7 @@ def validate_name(fullname):
         return False
     error['Error'] = 'Your firstname and lastname must ' \
         'be alphabetical and seperated by a space'
+    create_error(error, 400)
     return False
 
 
@@ -174,6 +185,7 @@ def validate_email(email):
     if re.match(r'[a-zA-Z0-9.-]+@[a-z]+\.[a-z]+', email):
         return True
     error['Error'] = 'Invalid email address'
+    create_error(error, 400)
 
 
 def validate_descriptions(description):
@@ -181,6 +193,7 @@ def validate_descriptions(description):
     if len(description) <= 200:
         return True
     error['Error'] = 'Description is too long'
+    create_error(error)
 
 
 def validate_password(password):
@@ -193,20 +206,22 @@ def validate_password(password):
         return False
     error['Error'] = 'Password must have atleast one Block letter, ' \
         'a number and a symbol'
+    create_error(error, 400)
     return False
 
 
 def validate_item_names(name):
     """Validate item names"""
-    print(name, '**********')
     if isinstance(name, str) and check_item_name_alphabet(name):
         if check_item_name_upper_limit(name) and \
                 check_item_name_lower_limit(name):
             return True
-        error['Error'] = 'The name should have between 4 and 20 characters'
-        return False
-    error['Error'] = 'The name must be from alphabetical letters'
-    return False
+        else:
+            error['Error'] = 'The name should have between 4 and 20 characters'
+            create_error(error, 400)
+    else:
+        error['Error'] = 'The name must be from alphabetical letters'
+        create_error(error, 400)
 
 
 def check_data_keys(data, expected_keys):
@@ -214,19 +229,33 @@ def check_data_keys(data, expected_keys):
     for key in expected_keys:
         if key not in data:
             error['Error'] = key+' key missing'
+            create_error(error, 400)
             return False
     return True
 
 
 def validation(data, expected):
     """Checks for expected data values"""
+    print('+++++++++++++++++++')
     data_keys = check_data_keys(data, expected)
     if data_keys and check_values(data):
         return True
 
+
 def valid_register():
-    print(valid_data['password'], '========')
     if validate_username(valid_data['username']) and validate_name(
         valid_data['name']) and validate_password(valid_data[
             'password']) and validate_email(valid_data['email']):
         return True
+
+
+def query_username(e, state):
+    check_user = Users.query.filter_by(
+        user_username=valid_data['username']).first()
+    if check_user is None and not state:
+        return True
+    elif check_user and state:
+        objects['user'] = check_user
+        return objects
+    error['Error'] = e['Error']
+    create_error(error, e['e'])

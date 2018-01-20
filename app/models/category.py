@@ -1,5 +1,6 @@
 from app import db
 from app.models.users import Users
+from datetime import datetime
 
 
 class Category(db.Model):
@@ -14,11 +15,11 @@ class Category(db.Model):
                                   order_by='Recipes.rec_id',
                                   cascade='delete, all')
 
-    def __init__(self, cat_name, user_id, description=None, date=None):
+    def __init__(self, cat_name, user_id, description=None):
         self.cat_name = cat_name
         self.user_id = user_id
         self.cat_description = description
-        self.cat_date = date
+        self.cat_date = datetime.now()
 
     def add(self):
         db.session.add(self)

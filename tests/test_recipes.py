@@ -171,7 +171,7 @@ class TestRecipes(BaseTestCase):
         self.create_recipe()
         with self.client:
             headers = self.helper_login_with_token()
-            response = self.client.get('/category/1/recipes/1/one/',
+            response = self.client.get('/category/1/recipes/1',
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())

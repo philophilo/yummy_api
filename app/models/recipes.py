@@ -1,5 +1,6 @@
 from app import db
 from app.models.category import Category
+from datetime import datetime
 
 
 class Recipes(db.Model):
@@ -12,10 +13,10 @@ class Recipes(db.Model):
     rec_description = db.Column(db.String(200), nullable=True)
     rec_date = db.Column(db.DateTime, nullable=False)
 
-    def __init__(self, name, category, ingredients, date, description=None):
+    def __init__(self, name, category, ingredients, description=None):
         self.rec_name = name
         self.rec_cat = category
-        self.rec_date = date
+        self.rec_date = datetime.now()
         self.rec_ingredients = ingredients
         self.rec_description = description
 
