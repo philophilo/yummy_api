@@ -3,7 +3,6 @@ from app.models.category import Category
 
 
 def check_category_name(user_id, e, state):
-    print('................', valid_data)
     check_category = Category.query.filter_by(
         user_id=int(user_id),
         cat_name=valid_data['category_name']
@@ -18,14 +17,13 @@ def check_category_name(user_id, e, state):
 
 
 def check_category_id(user_id, category_id, e, state):
-    print('==', user_id, '++', category_id, '--', e, '**', '__', state)
     user_category = Category.query.filter_by(
         cat_id=category_id, user_id=user_id).first()
-    # check that the category object is not empty
     if user_category is None and not state:
         return True
     elif user_category and state:
         objects['category'] = user_category
         return objects
     error['Error'] = e['Error']
+    print('??????????????????????', error)
     create_error(error, e['e'])

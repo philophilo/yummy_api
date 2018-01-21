@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.org/philophilo/yummy_api.svg?branch=master)](https://travis-ci.org/philophilo/yummy_api) [![Coverage Status](https://coveralls.io/repos/github/philophilo/yummy_api/badge.svg)](https://coveralls.io/github/philophilo/yummy_api) [![Maintainability](https://api.codeclimate.com/v1/badges/5e39cd477a45d4144b68/maintainability)](https://codeclimate.com/github/philophilo/yummy_api/maintainability)
+[![Build Status](https://travis-ci.org/philophilo/yummy_api.svg?branch=develop)](https://travis-ci.org/philophilo/yummy_api) [![Coverage Status](https://coveralls.io/repos/github/philophilo/yummy_api/badge.svg?branch=develop)](https://coveralls.io/github/philophilo/yummy_api?branch=develop) [![Maintainability](https://api.codeclimate.com/v1/badges/5e39cd477a45d4144b68/maintainability)](https://codeclimate.com/github/philophilo/yummy_api/maintainability)
 
 
 Yummy Recipes is an application that allow users to keep track of their owesome food recipes. It helps individuals who love to cook and eat good food to remember recipes and also share with others.

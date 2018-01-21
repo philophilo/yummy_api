@@ -30,7 +30,8 @@ def do_create_recipe(data, category_id):
     return format_error['error']
 
 
-def do_recipe_update(data, user_id, category_id, recipe_id):
+def do_recipe_update(data_list, user_id, category_id, recipe_id):
+    data, recipe_category_id = data_list
     user_recipe = Recipes.query.filter_by(
         rec_cat=category_id, rec_id=recipe_id).first()
     if user_recipe is not None:
@@ -38,7 +39,7 @@ def do_recipe_update(data, user_id, category_id, recipe_id):
         user_recipe.rec_cat = category_id
         user_recipe.rec_ingredients = valid_data['ingredients'],
         user_recipe.rec_description = valid_data['description']
-        user_recipe.rec_cat = data['recipe_category_id']
+        user_recipe.rec_cat = recipe_category_id
         user_recipe.update()
         return jsonify(
             {'recipe_id': user_recipe.rec_id,
@@ -49,6 +50,7 @@ def do_recipe_update(data, user_id, category_id, recipe_id):
                 'recipe_ingredients':
                 user_recipe.rec_ingredients.split(','),
                 'message': 'Recipe updated'}), 201
+    create_error({'Error': 'Recipe not found'}, 404)
     return format_error['error']
 
 
@@ -83,7 +85,7 @@ def get_paginated_recipes(user_recipes):
         current_page, number_of_pages, next_page, previous_page = \
             user_recipes.page, user_recipes.pages, user_recipes.next_num, \
             user_recipes.prev_num
-        results = create_recipes_list(user_recipes)
+        results = create_recipes_list(user_recipes.items)
         return jsonify(
             {'recipes': results, 'count': str(len(results)),
              'current_page': current_page, 'number_of_pages': number_of_pages,

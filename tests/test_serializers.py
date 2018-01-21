@@ -66,10 +66,10 @@ class TestSerialiszers(BaseTestCase):
             c = {'a': 1}
             return c['b']
         except Exception as e:
-            response = handle_exceptions(
+            handle_exceptions(
                 type(e).__name__, {'KeyError':{'Error':'key not found',
                                                'e':400}})
-            reply = json.loads(response[0].data.decode())
+            reply = json.loads(format_error['error'][0].data.decode())
             self.assertEqual(reply['Error'], 'key not found')
 
     def test_handle_unfamiliar_exceptions(self):

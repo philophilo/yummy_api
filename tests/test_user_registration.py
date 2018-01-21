@@ -39,7 +39,7 @@ class TestUserRegistration(BaseTestCase):
                                             dict(username="user",
                                                  name="fname lname",
                                                  email="test.user@gmail.com",
-                                                 password="Passklnwjenidjnwieniunfinfinrinirinijn!0mdfkjkjdfhbrhbfhjbjhfbrhrbhbbhjjhrbhebbberbhjerjbn")))
+                                                 password="Passklnwjenidjnwieniunfinfinrinirinijn!0mdfkjkjdfhbrhbfhjbjhfbrhrbhbbhjjhrbhebbberbhjerjbn1")))
             reply = json.loads(response.data.decode())
             self.assertEqual(reply['Error'], "Password can have between 6 and 50 characters")
 

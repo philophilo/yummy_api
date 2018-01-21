@@ -4,7 +4,7 @@ from flasgger import swag_from
 from app.models.recipes import Recipes
 from app.models.users import Users
 from flask_login import login_required
-from app.serializer import (check_data_keys, check_values, format_error,
+from app.serializer import (check_values, format_error,
                             validation,
                             handle_exceptions,
                             check_token_wrapper, create_error)
@@ -31,8 +31,6 @@ class RecipesView():
                 return do_create_recipe(data, category_id)
             return format_error['error']
         except Exception as ex:
-            import traceback
-            traceback.print_exc()
             excepts = {'ValueError': {'Error': 'Invalid entry, please provide' +
                                       ' the category id as integer while ' +
                                       'recipe name and ingredients as string',
@@ -40,7 +38,7 @@ class RecipesView():
                        'IntegrityError': {'Error': 'Recipe name already exists',
                                           'e': '409'},
                        'BadRequest': {'Error': 'Please parse category id, ' +
-                                      'name and ingredients as string', 'e': 400
+                                      'recipe name and ingredients', 'e': 400
                                       }}
             handle_exceptions(type(ex).__name__, excepts)
             return format_error['error']
@@ -54,11 +52,13 @@ class RecipesView():
         """The function updates a recipe"""
         try:
             user_id, data, error = Users.decode_token(token), request.json, \
-                {'Error': 'Recipe not found', 'e': 404}
-            if check_data_keys(data, ['recipe_category_id']) and validation(
+                {'Error': 'category not found', 'e': 404}
+            recipe_category_id = data.pop('recipe_category_id')
+            if int(recipe_category_id) and validation(
                 data, ['recipe_name', 'ingredients', 'description']) \
                     and check_category_id(user_id, category_id, error, True):
-                return do_recipe_update(data, user_id, category_id, recipe_id)
+                return do_recipe_update(
+                    [data, recipe_category_id], user_id, category_id, recipe_id)
             return format_error['error']
         except Exception as ex:
             excepts = {'KeyError': {'Error': str(ex).strip('\'') +
@@ -83,7 +83,7 @@ class RecipesView():
             # get the user id from the token
             user_id, error = Users.decode_token(token), \
                 {'Error': 'Category not found', 'e': 404}
-            if check_category_id(user_id, category_id, error, False):
+            if check_category_id(user_id, category_id, error, True):
                 user_recipe = Recipes.query.filter_by(
                     rec_cat=category_id, rec_id=recipe_id).first()
                 if user_recipe is not None:
@@ -112,12 +112,10 @@ class RecipesView():
             user_id, error = Users.decode_token(token), \
                 {'Error': 'category not found', 'e': 404}
             if check_category_id(user_id, category_id, error, True):
-                    return get_recipes(user_id, category_id, True)
+                return get_recipes(user_id, category_id, True)
             return format_error['error']
         # capture value error
         except Exception as ex:
-            import traceback
-            traceback.print_exc()
             excepts = {'ValueError': {'Error': 'Invalid entry, please ' +
                                       ' provide the category id as ' +
                                       'integer', 'e': 400},
@@ -140,8 +138,6 @@ class RecipesView():
                 return get_recipes(user_id, category_id, False, recipe_id)
             return format_error['error']
         except Exception as ex:
-            import traceback
-            traceback.print_exc()
             excepts = {'ValueError': {'Error': 'Invalid entry, please ' +
                                       'provide the category id and recipe ' +
                                       'id as integers', 'e': 400},

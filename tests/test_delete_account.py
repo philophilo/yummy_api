@@ -15,8 +15,7 @@ class TestDeleteAccount(BaseTestCase):
                                           content_type='application/json',
                                           headers=headers)
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['Error'], 'Please create a ' +
-                             'password key and value')
+            self.assertEqual(reply['Error'], 'Password is missing')
 
     def test_deleting_account_with_empty_password_value(self):
         """Test deleting an account with emoty password value"""
@@ -55,4 +54,4 @@ class TestDeleteAccount(BaseTestCase):
                                           data=json.dumps(
                                               dict(password=self.test_user_password
                                                    )))
-            self.assertEqual(response.status_code, 204)
+            self.assertEqual(response.status_code, 200)

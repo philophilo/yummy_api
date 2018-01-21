@@ -92,7 +92,7 @@ class TestRecipes(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'no recipes found')
+            self.assertEqual(reply['Error'], 'no recipes found')
 
     def test_create_duplicate_recipe(self):
         """
@@ -160,7 +160,7 @@ class TestRecipes(BaseTestCase):
                                        headers=headers)
             reply = json.loads(response.data.decode())
             print('****', reply)
-            self.assertEqual(reply['message'], 'category not found')
+            self.assertEqual(reply['Error'], 'category not found')
 
     def test_viewing_one_recipe(self):
         """
@@ -296,6 +296,7 @@ class TestRecipes(BaseTestCase):
                                               dict(recipe_name="Ugandan beef"))
                                           )
             reply = json.loads(response.data.decode())
+            print('----------->', reply)
             self.assertEqual(reply['Error'], 'Recipe not found')
 
     def test_deleting_recipe_from_unknown_category(self):
@@ -313,7 +314,7 @@ class TestRecipes(BaseTestCase):
                                           data=json.dumps(
                                               dict(recipe_name="Ugandan beef")))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'Category not found')
+            self.assertEqual(reply['Error'], 'Category not found')
 
     def test_deleting_unknown_category(self):
         self.create_user()
@@ -327,7 +328,7 @@ class TestRecipes(BaseTestCase):
                                           data=json.dumps(
                                               dict(category_name="Meat")))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'category not found')
+            self.assertEqual(reply['Error'], 'category not found')
 
     def test_deleting_known_category(self):
         self.create_user()

@@ -41,23 +41,21 @@ class BaseTestCase(TestCase):
 
         category = Category(user_id=1,
                             cat_name=self.test_category_name,
-                            date=datetime.now(),
                             description=
                             self.test_category_description)
         category.add()
 
     def create_recipe(self):
         """Helper function creates recipe for tests"""
+
         recipe = Recipes(name=self.test_recipe,
                                 category=1,
                                 description=self.test_recipe_description,
-                                ingredients=self.test_recipe_ingredients,
-                                date=datetime.now())
+                                ingredients=self.test_recipe_ingredients)
         recipe2 = Recipes(name=self.test_recipe2,
                                 category=1,
                                 description=self.test_recipe_description,
-                                ingredients=self.test_recipe_ingredients,
-                                date=datetime.now())
+                                ingredients=self.test_recipe_ingredients)
         recipe2.add()
         recipe.add()
 

@@ -51,6 +51,7 @@ class TestCategories(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())
+            print('>>>>>', reply)
             self.assertEqual(reply['message'], 'category found')
             self.assertEqual(reply['category_name'], 'Meat')
 
@@ -63,7 +64,7 @@ class TestCategories(BaseTestCase):
                                        content_type='application/json',
                                        headers=headers)
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'category not found')
+            self.assertEqual(reply['Error'], 'category not found')
 
     def test_updating_category(self):
         self.create_user()
@@ -96,7 +97,7 @@ class TestCategories(BaseTestCase):
                                                category_description=self.test_category_description
                                            )))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'category not found')
+            self.assertEqual(reply['Error'], 'category not found')
 
     def test_retrieving_more_pages(self):
         self.create_user()

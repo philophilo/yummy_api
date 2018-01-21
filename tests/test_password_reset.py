@@ -30,7 +30,7 @@ class TestPasswordReset(BaseTestCase):
                                                 new_password='pass123',
                                                 confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'Incorrect password')
+            self.assertEqual(reply['Error'], 'Incorrect password')
 
     def test_password_reset_without_new_password_key(self):
         self.create_user()
@@ -69,7 +69,7 @@ class TestPasswordReset(BaseTestCase):
                                                 new_password='pass12',
                                                 confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'Passwords do not match')
+            self.assertEqual(reply['Error'], 'Passwords do not match')
 
     def test_password_reset_success(self):
         self.create_user()
@@ -83,5 +83,4 @@ class TestPasswordReset(BaseTestCase):
                                                 new_password='pass123',
                                                 confirm_password='pass123')))
             reply = json.loads(response.data.decode())
-            self.assertEqual(reply['message'], 'Your password was ' +
-                             'successfully reset')
+            self.assertEqual(reply['message'], 'Password was reset')

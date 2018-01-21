@@ -20,7 +20,7 @@ def create_error(error, code):
 def check_empty_spaces(string):
     """ Check if a string still has any empty spaces"""
     if not (isinstance(string, str)):
-        return ' is not a string'
+        return False, ' is not a string'
     string = string.strip()
     split_string = string.split(" ")
     number_of_splits = len(split_string)
@@ -29,18 +29,18 @@ def check_empty_spaces(string):
         if len(i) == 0:
             empty_chunks += 1
     if empty_chunks == number_of_splits:
-        return ' is empty'
-    return string
+        return False, ' is empty'
+    return True, string
 
 
 def check_values(details):
     """check that the value is strictly a string"""
     for key, value in details.items():
         result = check_empty_spaces(value)
-        if value is result:
-            valid_data[key] = result
+        if result[0]:
+            valid_data[key] = result[1]
         else:
-            error['Error'] = key+''+result
+            error['Error'] = key+''+result[1]
             create_error(error, 400)
             return False
     return True
@@ -71,6 +71,7 @@ def check_token_wrapper(func):
 
 def handle_exceptions(ex, expected):
     error, code = {}, 0
+    print('------------------>>>>>>', ex, expected)
     if ex in expected:
         error['Error'], code = expected[ex]['Error'], expected[ex]['e']
     return create_error(error, code) if code else create_error(ex, 400)
@@ -193,7 +194,7 @@ def validate_descriptions(description):
     if len(description) <= 200:
         return True
     error['Error'] = 'Description is too long'
-    create_error(error)
+    create_error(error, 400)
 
 
 def validate_password(password):
@@ -203,6 +204,7 @@ def validate_password(password):
                 check_password_lower_limit(password):
             return True
         error['Error'] = 'Password can have between 6 and 50 characters'
+        create_error(error, 400)
         return False
     error['Error'] = 'Password must have atleast one Block letter, ' \
         'a number and a symbol'
@@ -236,7 +238,6 @@ def check_data_keys(data, expected_keys):
 
 def validation(data, expected):
     """Checks for expected data values"""
-    print('+++++++++++++++++++')
     data_keys = check_data_keys(data, expected)
     if data_keys and check_values(data):
         return True

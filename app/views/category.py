@@ -12,11 +12,11 @@ from app.serializer import (check_values, validation,
 from app.category_serializer import (check_category_name, check_category_id)
 
 
-def return_category():
+def return_category(message):
     category = {'id': objects['category'].cat_id,
                 'category_name': objects['category'].cat_name,
                 'category_description': objects['category'].cat_description,
-                'message': 'category updated'}
+                'message': message}
     return category
 
 
@@ -52,7 +52,8 @@ def update_category(user_id, category_id, error):
         objects['category'].cat_description = valid_data[
             "category_description"]
         objects['category'].update()
-        return jsonify(return_category()), 201
+        return jsonify(return_category('category updated')), 201
+    return format_error['error']
 
 
 def do_add_category(user_id):
@@ -143,7 +144,7 @@ class CategoryView():
                 {'Error': 'category not found', 'e': 404}
             # get the category object with category
             if check_category_id(user_id, category_id, error, True):
-                return jsonify(return_category()), 200
+                return jsonify(return_category('category found')), 200
             return format_error['error']
         except Exception as ex:
             return jsonify({'Error': str(ex)}), 400
