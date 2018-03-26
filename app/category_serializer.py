@@ -25,5 +25,4 @@ def check_category_id(user_id, category_id, e, state):
         objects['category'] = user_category
         return objects
     error['Error'] = e['Error']
-    print('??????????????????????', error)
     create_error(error, e['e'])

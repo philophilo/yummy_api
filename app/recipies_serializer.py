@@ -45,7 +45,7 @@ def do_recipe_update(data_list, user_id, category_id, recipe_id):
             {'recipe_id': user_recipe.rec_id,
                 'recipe_name': user_recipe.rec_name,
                 'category_name': objects['category'].cat_name,
-                'category': user_recipe.rec_cat,
+                'category_id': user_recipe.rec_cat,
                 'description': user_recipe.rec_description,
                 'recipe_ingredients':
                 user_recipe.rec_ingredients.split(','),
@@ -60,7 +60,9 @@ def create_recipes_list(user_recipes):
         result = {
             'id': recipe.rec_id, 'recipe_name': recipe.rec_name,
             'description': recipe.rec_description, 'ingredients':
-            recipe.rec_ingredients.split(",")
+            recipe.rec_ingredients.split(","),
+            'recipe_date': recipe.rec_date,
+            'category_id': recipe.rec_cat
         }
         results.append(result)
     return results
@@ -70,6 +72,8 @@ def get_one_recipe(user_recipes):
     """The method returns one recipe from a parsed recipes object"""
     if user_recipes is not None:
         results = create_recipes_list(user_recipes)
+        for recipe in results:
+            recipe['category_name'] = objects['category'].cat_name
         if len(results):
             return jsonify({'recipes': results, 'message': 'recipe found',
                             'count': len(results)}), 200
@@ -86,6 +90,8 @@ def get_paginated_recipes(user_recipes):
             user_recipes.page, user_recipes.pages, user_recipes.next_num, \
             user_recipes.prev_num
         results = create_recipes_list(user_recipes.items)
+        for recipe in results:
+            recipe['category_name'] = objects['category'].cat_name
         return jsonify(
             {'recipes': results, 'count': str(len(results)),
              'current_page': current_page, 'number_of_pages': number_of_pages,
@@ -114,7 +120,7 @@ def find_recipes(user_id):
         Recipes, Category.cat_id == Recipes.rec_cat).add_columns(
             Category.cat_id, Category.user_id, Category.cat_name,
             Recipes.rec_id, Recipes.rec_name, Recipes.rec_description,
-            Recipes.rec_ingredients).filter(
+            Recipes.rec_ingredients, Recipes.rec_date).filter(
                 Category.user_id == user_id).filter(
                     Recipes.rec_name.ilike('%'+q+'%')).paginate(
                         page, per_page, False)
@@ -131,13 +137,14 @@ def do_recipes_search(user_id):
         for recipe in found_recipes[0].items:
             result = {
                 'category_id': recipe.cat_id, 'category_name': recipe.cat_name,
-                'recipe_id': recipe.rec_id, 'recipe_name': recipe.rec_name,
+                'id': recipe.rec_id, 'recipe_name': recipe.rec_name,
                 'description': recipe.rec_description,
-                'recipes_ingredients': recipe.rec_ingredients
+                'ingredients': recipe.rec_ingredients.split(','),
+                'recipe_date': recipe.rec_date
             }
             results.append(result)
         return jsonify(
-            {'categories': results, 'count': str(len(results)),
+            {'recipes': results, 'count': str(len(results)),
              'current_page': current_page, 'number_of_pages': number_of_pages,
              'next_page': next_page, 'previous_page': previous_page,
              'message': 'Recipes found'}), 200

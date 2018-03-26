@@ -54,8 +54,6 @@ class UserView():
                 return jsonify({'username': user.user_username}), 201
             return format_error['error']
         except Exception as ex:
-            import traceback
-            traceback.print_exc()
             excepts = {'KeyError': {'Error': str(ex).strip('\'')+' key is ' +
                                     'missing', 'e': 400}, 'IntegrityError':
                        {'Error': 'Email already exists', 'e': '409'},
@@ -70,6 +68,7 @@ class UserView():
     def login():
         """The function logs in a new user"""
         try:
+            print("====================================")
             data, q_error = request.json, {'Error': 'User not found', 'e': 403}
             if validation(data, ['username', 'password']) and \
                     query_username(q_error, True):
@@ -78,8 +77,13 @@ class UserView():
                         valid_data['password']):
                     token = objects['user'].generate_auth_token()
                     login_user(objects['user'])
-                    return jsonify({'token': token.decode('ascii'),
-                                    'message': 'login was successful'}), 200
+                    user = {"username": objects['user'].user_username,
+                            "name": objects['user'].user_name,
+                            "email": objects['user'].user_email}
+                    print(user, "+++++++++++++++++++++++++++")
+                    return jsonify({
+                        'user':user, 'token': token.decode('ascii'),
+                        'message': 'login was successful'}), 200
                 else:
                     create_error({'Error': 'Incorrect password'}, 403)
             return format_error['error']
@@ -89,8 +93,31 @@ class UserView():
             handle_exceptions(type(ex).__name__, excepts)
             return format_error['error']
 
+    @app.route("/auth/get_user", methods=['GET'])
+    @check_token_wrapper
+    @swag_from('/app/docs/userlogin.yml')
+    def get_user(token):
+        """The function logs in a new user"""
+        try:
+            user_id = Users.decode_token(token)
+            user = Users.query.filter_by(id=user_id).first()
+            if (user):
+                user = {"username": user.user_username,
+                        "name": user.user_name,
+                        "id": user_id,
+                        "email": user.user_email}
+                return jsonify({
+                    "user": user, "message": "user records found"
+                }), 200
+            return jsonify({"Error": "User record not found"}), 401
+        except Exception as ex:
+            excepts = {'BadRequest': {'Error': 'Please ensure all fieds are ' +
+                                      'correctly specified', 'e': 400}}
+            handle_exceptions(type(ex).__name__, excepts)
+            return format_error['error']
+
     @app.route('/auth/reset-password', methods=['PUT'])
-    @login_required
+    # @login_required
     @check_token_wrapper
     @swag_from('/app/docs/userresetpassword.yml')
     def reset_password(token):
@@ -137,7 +164,7 @@ class UserView():
             return format_error['error']
 
     @app.route('/auth/logout', methods=['POST'])
-    @login_required
+    # @login_required
     @check_token_wrapper
     @swag_from('/app/docs/userlogout.yml')
     def logout(token):

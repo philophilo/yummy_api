@@ -4,9 +4,11 @@ import os
 from configuration.config import DevelopingConfig
 from flasgger import Swagger
 from flask_login import LoginManager
+from flask_cors import CORS
 
 
 app = Flask(__name__)
+CORS(app)
 swagger = Swagger(app,
                   template={
                     "info": {

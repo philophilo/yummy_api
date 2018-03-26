@@ -19,7 +19,7 @@ class RecipesView():
     """The class has the views for recipes"""
 
     @app.route('/category/<int:category_id>/recipes/', methods=['POST'])
-    @login_required
+    # @login_required
     @check_token_wrapper
     @swag_from('/app/docs/recipesaddrecipe.yml')
     def add_recipe(token, category_id):
@@ -45,7 +45,7 @@ class RecipesView():
 
     @app.route('/category/<int:category_id>/recipes/<int:recipe_id>',
                methods=['PUT'])
-    @login_required
+    # @login_required
     @check_token_wrapper
     @swag_from('/app/docs/recipesupdaterecipe.yml')
     def update_recipe(token, category_id, recipe_id):
@@ -74,7 +74,7 @@ class RecipesView():
     # TODO remove the category_id from the route
     @app.route('/category/<int:category_id>/recipes/<int:recipe_id>',
                methods=['DELETE'])
-    @login_required
+    # @login_required
     @check_token_wrapper
     @swag_from('/app/docs/recipesdeleterecipe.yml')
     def delete_recipe(token, category_id, recipe_id):
@@ -103,7 +103,6 @@ class RecipesView():
             return format_error['error']
 
     @app.route('/category/<int:category_id>/recipes/', methods=['GET'])
-    @login_required
     @check_token_wrapper
     @swag_from('/app/docs/recipesviewcategoryrecipes.yml')
     def view_category_recipes(token, category_id):
@@ -147,7 +146,7 @@ class RecipesView():
             return format_error['error']
 
     @app.route('/recipes/search/', methods=['GET'])
-    @login_required
+    # @login_required
     @check_token_wrapper
     @swag_from('/app/docs/recipessearchrecipes.yml')
     def search_recipes(token):

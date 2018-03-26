@@ -51,6 +51,7 @@ def check_token_wrapper(func):
     @wraps(func)
     def auth(*args, **kwargs):
         token = None
+
         try:
             auth_header = request.headers.get('Authorization')
             token = auth_header.split(" ")[1]
@@ -71,7 +72,6 @@ def check_token_wrapper(func):
 
 def handle_exceptions(ex, expected):
     error, code = {}, 0
-    print('------------------>>>>>>', ex, expected)
     if ex in expected:
         error['Error'], code = expected[ex]['Error'], expected[ex]['e']
     return create_error(error, code) if code else create_error(ex, 400)
@@ -124,7 +124,6 @@ def check_password(password):
 
 def check_password_upper_limit(password):
     """check the upper limit of password"""
-    print(len(password), '.....')
     if len(password) <= 50:
         return True
 
@@ -239,7 +238,11 @@ def check_data_keys(data, expected_keys):
 def validation(data, expected):
     """Checks for expected data values"""
     data_keys = check_data_keys(data, expected)
-    if data_keys and check_values(data):
+    new_data = {}
+    for exp in expected:
+        if exp in data:
+            new_data[exp] = data[exp]
+    if data_keys and check_values(new_data):
         return True
 
 

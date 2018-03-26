@@ -24,7 +24,8 @@ def create_category_list(user_categories):
     results = []
     for category in user_categories.items:
         result = {'id': category.cat_id, 'category_name': category.cat_name,
-                  'category_description': category.cat_description
+                  'category_description': category.cat_description,
+                  'category_date': category.cat_date
                   }
         results.append(result)
     return results
@@ -65,6 +66,7 @@ def do_add_category(user_id):
     return jsonify({
         'id': category.cat_id, 'category_name': category.cat_name,
         'category_description': category.cat_description,
+        'category_date': category.cat_date,
         'message': 'category created'}), 201
 
 
@@ -91,12 +93,12 @@ def do_category_search(user_id, page, per_page, q):
 class CategoryView():
     """The class has views for categories"""
     @app.route('/category', methods=['POST'])
-    @login_required
     @check_token_wrapper
     @swag_from('/app/docs/categorycreatecategory.yml')
     def create_category(token):
         """The function creates a new category"""
         try:
+            next = request.args.get('next')
             data, user_id, error = request.json, Users.decode_token(token), \
                 {'Error': 'Category name already exists', 'e': 409}
             if validation(data, ['category_name', 'category_description']) and \
@@ -105,8 +107,6 @@ class CategoryView():
                 return do_add_category(user_id)
             return format_error['error']
         except Exception as ex:
-            import traceback
-            traceback.print_exc()
             excepts = {'IntegrityError': {'Error': 'Category name already ' +
                                           'exists', 'e': 409},
                        'BadRequest': {'Error': 'Please create a category ' +
@@ -117,7 +117,6 @@ class CategoryView():
             return format_error['error']
 
     @app.route('/category/', methods=['GET'])
-    @login_required
     @check_token_wrapper
     @swag_from('/app/docs/categoryviewallcategories.yml')
     def view_all_categories(token):
@@ -150,7 +149,7 @@ class CategoryView():
             return jsonify({'Error': str(ex)}), 400
 
     @app.route('/category/<int:category_id>', methods=['PUT'])
-    @login_required
+    # @login_required
     @check_token_wrapper
     def update_category(token, category_id):
         """The function updates a category"""
@@ -161,8 +160,6 @@ class CategoryView():
                 return update_category(user_id, category_id, error)
             return format_error['error']
         except Exception as ex:
-            import traceback
-            traceback.print_exc()
             excepts = {'IntegrityError': {'Error': 'Recipe name already ' +
                                           'exists', 'e': 409},
                        'ValueError': {'Error': 'Invalid entry', 'e': 400},
@@ -174,7 +171,6 @@ class CategoryView():
             return format_error['error']
 
     @app.route('/category/<int:category_id>', methods=['DELETE'])
-    @login_required
     @check_token_wrapper
     @swag_from('/app/docs/categorydeletecategory.yml')
     def delete_category(token, category_id):
@@ -196,7 +192,6 @@ class CategoryView():
             return format_error['error']
 
     @app.route('/category/search/', methods=['GET'])
-    @login_required
     @check_token_wrapper
     @swag_from('/app/docs/categorysearchcategories.yml')
     def search_categories(token):
