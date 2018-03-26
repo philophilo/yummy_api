@@ -37,6 +37,9 @@ You can test the application using two libraries nose2 or nosetests: ``nose2 --w
 # Running tests
 You can test the application using two libraries nose2 or nosetests: ``nose2 --with-coverage` or `nosetests --with-coverage --cover-package=apps``
 
+# API on Heroku
+[yummy-foods.herokuapp.com](https://yummy-foods.herokuapp.com/apidocs/)
+
 # API Endpoints
 ### Users
 |              URL Endpoints            | HTTP Requests |                      Access                    | Public Access|
