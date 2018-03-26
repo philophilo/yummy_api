@@ -116,8 +116,9 @@ def check_username_lower_limit(username):
 def check_password(password):
     """check that the password has numbers, symbols and minimum"""
     pattern = re.compile(
-        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!%*?&])[A-Za-z\d$@$!%*?&]')
+        r'^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[$@$!#%*?&])[A-Za-z\d$@$!%*?&]')
     result = pattern.match(password)
+    print("****", result, password)
     if result:
         return True
 
@@ -199,6 +200,7 @@ def validate_descriptions(description):
 def validate_password(password):
     """Validate password constraints"""
     if check_password(password):
+        print('---')
         if check_password_upper_limit(password) and \
                 check_password_lower_limit(password):
             return True
@@ -247,6 +249,7 @@ def validation(data, expected):
 
 
 def valid_register():
+    print("=====", valid_data['password'])
     if validate_username(valid_data['username']) and validate_name(
         valid_data['name']) and validate_password(valid_data[
             'password']) and validate_email(valid_data['email']):
