@@ -1,5 +1,5 @@
 from app import app, login_manager
-from flask import request, jsonify
+from flask import request, jsonify, redirect
 from flasgger import swag_from
 from app.models.blacklist import Blacklist
 from app.models.users import Users
@@ -36,6 +36,11 @@ def password_reset_verification(user_id):
         create_error({'Error': 'Incorrect password'}, 403)
 
 
+@app.route("/")
+def index():
+    return redirect("apidocs")
+
+
 class UserView():
     """The class views for user account"""
     @app.route('/auth/register', methods=['POST'])
@@ -43,7 +48,7 @@ class UserView():
     def user_register():
         """The function registers a new user"""
         try:
-            data, error  = request.json, {'Error': 'Username already exists',
+            data, error = request.json, {'Error': 'Username already exists',
                                           'e': 409}
             if validation(data, ['username', 'name', 'password', 'email']) \
                     and valid_register() and query_username(error, False):
